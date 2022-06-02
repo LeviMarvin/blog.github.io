@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>从 0 开始定制你的 OpenWrt 系统</title>
+    <url>/2022/06/02/%E4%BB%8E-0-%E5%BC%80%E5%A7%8B%E5%AE%9A%E5%88%B6%E4%BD%A0%E7%9A%84-OpenWrt-%E7%B3%BB%E7%BB%9F/</url>
+    <content><![CDATA[<p>最后更新：<strong>2022&#x2F;06&#x2F;01</strong><br>最后校对：<strong>2022&#x2F;06&#x2F;01</strong></p>
+<p>本教程分为二个部分：<strong>编译教程与问题解决</strong> 和 <strong>特殊设备问题解决</strong>。<br>编译教程与问题解决：基础知识、准备工作、开始编译、错误与解决、FAQ、其他。<br>OpenWrt 的一些功能实现会写在教程的“其他”节）</p>
+<p>请注意，文章部分 patch 代码块为了显示效果会写为 diff 代码块，我会在代码块前添加“（patch 代码）”来标志。</p>
+<p>本文仅在酷安、<a href="https://tualatin.club/?p=1044">图拉丁Club</a>、<a href="https://www.right.com.cn/forum/thread-8212637-1-1.html">恩山论坛</a>发布，请以上述平台中最新文章为准，谢绝一切转载。</p>
+<h2 id="基础知识-x2F-Basic"><a href="#基础知识-x2F-Basic" class="headerlink" title="基础知识 &#x2F; Basic"></a>基础知识 &#x2F; Basic</h2><p>本节名词解释：  </p>
+<ul>
+<li>SDK —— 英文 Software Development Kit 的缩写，翻译：“软件开发套件”。  </li>
+<li>ImageBuilder —— 翻译：映像构建器。  </li>
+<li>Github —— 国际著名的开源代码托管平台，国内可能无法直接访问。</li>
+</ul>
+<p><strong>对于教程中任何出现中文方括号（<code>【】</code>）的内容，请将其（包括方括号）替换为方括号内文本表示的“实际内容”。</strong><br>如：请将 <code>【Linux内核版本】</code> 替换为 <code>5.10.4</code>。</p>
+<h3 id="源码、SDK、ImageBuilder-x2F-Source-SDK-and-ImageBuilder"><a href="#源码、SDK、ImageBuilder-x2F-Source-SDK-and-ImageBuilder" class="headerlink" title="源码、SDK、ImageBuilder &#x2F; Source, SDK and ImageBuilder"></a>源码、SDK、ImageBuilder &#x2F; Source, SDK and ImageBuilder</h3><p>编译 OpenWrt 最好使用来自官方的源码。即位于 <a href="https://github.com/OpenWrt/OpenWrt">Github 仓库</a> 或 <a href="">第三方镜像源</a> 的源码。</p>
+<p>对于不同的需求，有下面三种选择：</p>
+<ol>
+<li>如果你想<strong>定制 OpenWrt</strong>，最好的方法是<strong>直接从 OpenWrt 放在 Github 上的源码开始修改和编译</strong>。  </li>
+<li>如果你想<strong>定制&#x2F;编译 opkg 的软件包</strong>（<code>*.ipk</code>）<strong>或定制 OpenWrt</strong>，最好的方法是<strong>直接从 OpenWrt 官方和各大镜像</strong>（如清华Tuna镜像源）<strong>上的 SDK 开始修改和编译</strong>。  </li>
+<li>如果你想<strong>简单打包 OpenWrt</strong>（给 OpenWrt 封装第三方 opkg），最好的方法是<strong>直接从 OpenWrt 官方和各大镜像</strong>（如清华 Tuna 镜像源）<strong>上的 ImageBuilder 开始修改和编译</strong>。</li>
+</ol>
+<p>复杂度和可定制度从上往下递减。<br>总的来说，OpenWrt 的源码、SDK、ImageBuilder 是面向不同人、不同需求所准备的。<br>编译 OpenWrt 的源码也可以生成 SDK 和 ImageBuilder（需要手动选择）。</p>
+<p>友情链接：</p>
+<ul>
+<li><a href="https://mirrors.tuna.tsinghua.edu.cn/">清华大学 Tuna 镜像源</a></li>
+<li><a href="https://mirrors.ustc.edu.cn/">中国科技大学镜像源</a></li>
+</ul>
+<h3 id="Patch-文件（补丁文件）-x2F-Patch-Files"><a href="#Patch-文件（补丁文件）-x2F-Patch-Files" class="headerlink" title="Patch 文件（补丁文件） &#x2F; Patch Files"></a>Patch 文件（补丁文件） &#x2F; Patch Files</h3><p>位置：补丁文件通常位于源码目录 <code>target/linux/【架构】/patches-【Linux 内核版本】/</code> 目录下，这个<strong>目录的名字不是固定的（请勿直接复制粘贴）</strong>。<br>名称：<code>000-XXXXXX.patch</code>，开头的数字（如：<code>000</code>）表示这个补丁文件的序号，也对补丁文件的应用顺序做了定义。短横线（“-”）后的英文字符串为对这个补丁文件的说明。<br>例如：<code>322-mt7621-fix-cpu-clk-add-clkdev.patch</code><br>需要注意：补丁文件开头的数字不能与现有补丁文件开头的数字重复！补丁文件的说明可以自定义。</p>
+<h4 id="语法-x2F-Grammar"><a href="#语法-x2F-Grammar" class="headerlink" title="语法 &#x2F; Grammar"></a>语法 &#x2F; Grammar</h4><h5 id="头-x2F-Head"><a href="#头-x2F-Head" class="headerlink" title="头 &#x2F; Head"></a>头 &#x2F; Head</h5><p>“头”用来表示需要修补的文件，以 <code>+++</code> 和 <code>---</code> 两行开头，另一个“头”的开始结束，用来表示旧文件和新文件。<br>例如：<br>（patch 代码）</p>
+<figure class="highlight diff"><table><tr><td class="code"><pre><span class="line"><span class="comment">--- a/arch/mips/ralink/mt7621.c</span></span><br><span class="line"><span class="comment">+++ b/arch/mips/ralink/mt7621.c</span></span><br></pre></td></tr></table></figure>
+
+<p>“头”后面的块均用来修补“头”中指定的文件。</p>
+<h5 id="块-x2F-Block"><a href="#块-x2F-Block" class="headerlink" title="块 &#x2F; Block"></a>块 &#x2F; Block</h5><p>“块”用来表示需要修补的内容，以  <code>@@</code>  开头，另一个“块”的开头或另一个“头”的开头结束。<br>例如：<br>（patch 代码）</p>
+<figure class="highlight diff"><table><tr><td class="code"><pre><span class="line"><span class="meta">@@ -105,11 +110,94 @@</span> static struct rt2880_pmx_group mt7621_pi</span><br></pre></td></tr></table></figure>
+<p>“块”的开头第一行可以称为“‘块’的起始行”，“块”的起始行中，两个“@@”（不是两个“@”）中间的内容指定这一块的内容应该修补原文件的哪里、多少行，修改的内容是什么。<br>在这个示例中，这一块表示：从原文件的第 105 行开始，删除 11 行，从第 110 行开始，添加 94 行。<br>逗号前的数字前面的符号用于表示增加行（<code>+</code>）还是删除行（<code>-</code>），不写符号则表示仅引用（用于“定位”）。<br><strong>要修改的内容从“块”的起始行已经开始了</strong>，第二个“@@”后面写的内容即为<strong>要改为的内容</strong>的第一行。</p>
+<p>增加行的内容的语法取决于被修补文件的类型，例如对于修补上述“头”中指定的需要修补的文件而言（<code>mt7621.c</code>），添加行的内容的语法为 C 语言的语法（因为“.c”结尾的文件为 C 语言源文件）。</p>
+<h3 id="OpenWrt-的固件分类-x2F-OpenWrt-Image-Category"><a href="#OpenWrt-的固件分类-x2F-OpenWrt-Image-Category" class="headerlink" title="OpenWrt 的固件分类 &#x2F; OpenWrt Image Category"></a>OpenWrt 的固件分类 &#x2F; OpenWrt Image Category</h3><p>OpenWrt 将其固件分为四类：</p>
+<ul>
+<li>Kernel —— 具有最少文件系统的 Linux 内核。</li>
+<li>Kernel1 —— 单独的 Linux 内核映像。</li>
+<li>rootfs0 —— 单独的根文件系统映像。</li>
+<li>Systupgrade —— 系统更新映像，含有固件所有完整的功能。</li>
+</ul>
+<p>最常使用的为 Kernel 和 Sysupgrade 映像。<br>Kernel 即为 initramfs 映像，具有基本的功能，一般用于双分区设备的初始化安装。<br>Sysupgrade 即为完整的全量映像，具有全部的软件包和完整的功能，为路由器的最终系统。</p>
+<p>Kernel1 和 rootfs0 不常使用，不在本文探讨。</p>
+<h3 id="OpenWrt-的源码分类-x2F-OpenWrt-Source-Category"><a href="#OpenWrt-的源码分类-x2F-OpenWrt-Source-Category" class="headerlink" title="OpenWrt 的源码分类  &#x2F; OpenWrt Source Category"></a>OpenWrt 的源码分类  &#x2F; OpenWrt Source Category</h3><p>目前 OpenWrt 的源码主要有：</p>
+<ul>
+<li>OpenWrt 官方源码</li>
+<li>X-Wrt 源码</li>
+<li>ImmortalWrt</li>
+<li>LEDE 源码（“L大”源码）</li>
+</ul>
+<p>X-Wrt 在 OpenWrt 的基础上，做了部分易用性优化。很多非官方源码已停止更新&#x2F;维护，推荐使用 OpenWrt 官方源代码，维护人数多，安全性更好，代码、使用的 Linux 内核更新，同时交流社区最多，易于问题解决。<br>本文使用 OpenWrt 官方源码。需要注意的是，固件的“特有”软件包由固件编译者添加，并非某个源码特有。</p>
+<h2 id="准备工作-x2F-Preparing-Works"><a href="#准备工作-x2F-Preparing-Works" class="headerlink" title="准备工作 &#x2F; Preparing Works"></a>准备工作 &#x2F; Preparing Works</h2><p>本节名词解释：  </p>
+<ul>
+<li>Linux —— 类 Unix 的开源操作系统（常用于通称基于其的系统）。  </li>
+<li>Windows —— 由微软开发的闭源操作系统的名称。  </li>
+<li>Ubuntu —— 一个基于 Linux 系统的名称。  </li>
+<li>Fedora —— 一个基于 Linux 系统的名称。  </li>
+<li>WSL —— 英文 Windows Subsystem for Linux 的缩写，翻译：“适用于 Windows 的 Linux 子系统”。  </li>
+<li>VMware —— 集成了虚拟机环境的软件的名称。  </li>
+<li>宿主机 —— 指运行虚拟机&#x2F;模拟环境等不存在于现实的环境的设备。</li>
+</ul>
+<p>本人的编译环境：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">CPU：Intel Core i5-10400</span><br><span class="line">GPU：NVIDIA GeForce GTX650 (Patched for UEFI)</span><br><span class="line">RAM：DDR4 16GB 2733MHz</span><br><span class="line">硬盘（系统）：SSD 120GB</span><br><span class="line">网络：中国联通 300Mbps GPON</span><br><span class="line"></span><br><span class="line">主系统：Windows 11 22H2 PREVIEW</span><br><span class="line">子系统：Ubuntu 20.04 LTS</span><br><span class="line">子系统环境：</span><br><span class="line">  &gt; 环境变量（PATH）：/home/levi/openwrt/staging_dir/host/bin:/home/levi/openwrt/staging_dir/toolchain-mipsel_24kc_gcc-11.2.0_musl/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin</span><br><span class="line">编译目标：OpenWrt 22.03 (git branch)</span><br><span class="line">  &gt; MediaTek Ralink MIPS</span><br><span class="line">  &gt; MT7621 based boards</span><br><span class="line">  &gt; Xiaomi Mi Router 3G</span><br></pre></td></tr></table></figure>
+
+<h3 id="安装依赖-x2F-Install-Dependencies"><a href="#安装依赖-x2F-Install-Dependencies" class="headerlink" title="安装依赖 &#x2F; Install Dependencies"></a>安装依赖 &#x2F; Install Dependencies</h3><p>官方和我均推荐使用 Ubuntu 系统进行编译，不论是虚拟机（WSL&#x2F;VMware&#x2F;其他）还是实体机。我尝试使用 Fedora 35（WSL）进行编译的时候尽管已经安装好各种依赖，但总有一些玄学问题。最后编译成功是在 Ubuntu 20.04 LTS（WSL）系统上。<br>Ubuntu 推荐执行这个命令（两条都要执行）：<br>（来自 OpenWrt 官网）</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt update</span><br><span class="line">sudo apt install build-essential ccache ecj fastjar file g++ gawk \</span><br><span class="line">gettext git java-propose-classpath libelf-dev libncurses5-dev \</span><br><span class="line">libncursesw5-dev libssl-dev python python2.7-dev python3 unzip wget \</span><br><span class="line">python3-distutils python3-setuptools python3-dev rsync subversion \</span><br><span class="line">swig time xsltproc zlib1g-dev</span><br></pre></td></tr></table></figure>
+
+<h3 id="编译前准备-x2F-Preparing-for-Compiling"><a href="#编译前准备-x2F-Preparing-for-Compiling" class="headerlink" title="编译前准备 &#x2F; Preparing for Compiling"></a>编译前准备 &#x2F; Preparing for Compiling</h3><ol>
+<li>用户账户：<br>确认当前用户不是“root”用户，如果是，则新建并切换为普通用户（建议在安装系统时就创建，后期创建的普通用户可能会有权限问题），随后设置默认用户为普通用户。</li>
+<li>环境变量：<br>对于 WSL，官方推荐使用下面的环境变量替代系统原有环境变量（因为 WSL 子系统的 <code>$PATH</code> 会包含部分 Windows 目录，而这些目录带有空格，可能导致编译失败）：<br><code>PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin</code><br>并且推荐在这个环境变量的基础上添加 OpenWrt 编译工具链的变量（OpenWrt 编译工具链在编译之前不存在，但是开始编译后会自动生成，因此可以在编译前添加入系统环境变量）：<br><code>PATH=~/【OpenWrt源码目录】/staging_dir/host/bin:~/【OpenWrt 源码目录】/staging_dir/toolchain-mipsel_24kc_gcc-【GCC 版本】_musl/bin:$PATH</code></li>
+<li>网络环境：<br>确保可以正常访问 OpenWrt 源码的 Github 仓库。<br>确保可以正常访问部分软件包源码的下载仓库&#x2F;地址。</li>
+<li>源码：<br>首先下载 OpenWrt 的源码（克隆仓库到本地）：<br><code>git clone https://github.com/openwrt/openwrt.git</code><br>执行命令修改目录权限，防止权限问题造成编译失败：</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chmod -R 777 OpenWrt</span><br><span class="line">chmod -R +x OpenWrt</span><br></pre></td></tr></table></figure>
+
+<p>进入源码目录，首先要做的事情是切换分支到你想要的 OpenWrt 版本（分支），如果没有你想要的版本，请从别处下载你想要的版本的 OpenWrt 源码，如果你想使用最新的代码，可以不切换分支，直接使用  <code>master</code>  分支的代码（但这样做可能导致你的固件包含许多 BUG）。<br>例如：强制切换到 OpenWrt 22.03 版本的分支。<br><code>git checkout --force openwrt-22.03</code><br>切换分支完毕后，我们需要添加 OpenWrt 的“feeds”。<br>修改 <code>feeds.conf.default</code> 文件，添加你想要的 feeds 源后，保存。<br>使用命令更新并安装 feeds 源：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">./script/feeds update -a	# 执行源码目录内 feeds 脚本的 update 命令</span><br><span class="line">./script/feeds install -a	# 执行源码目录内 feeds 脚本的 install 命令</span><br></pre></td></tr></table></figure>
+
+<h2 id="开始编译-x2F-Start-Compiling"><a href="#开始编译-x2F-Start-Compiling" class="headerlink" title="开始编译 &#x2F; Start Compiling"></a>开始编译 &#x2F; Start Compiling</h2><h3 id="配置-OpenWrt-的特性、功能、软件包等-x2F-Config-OpenWrt"><a href="#配置-OpenWrt-的特性、功能、软件包等-x2F-Config-OpenWrt" class="headerlink" title="配置 OpenWrt 的特性、功能、软件包等 &#x2F; Config OpenWrt"></a>配置 OpenWrt 的特性、功能、软件包等 &#x2F; Config OpenWrt</h3><p>首先要确定你编译的固件需要用在什么<strong>架构</strong>的什么<strong>芯片</strong>的什么<strong>型号</strong>的设备上。<br>比如我的是：固件用在 <strong>MediaTek MIPS</strong> 架构的 <strong>MT7621</strong> 的芯片的 <strong>小米路由 3G</strong> 设备。<br>使用命令：<br><code>make menuconfig</code><br>随后你的终端会变成一个使用键盘操作配置的 GUI 界面，如果终端界面大小过小则无法显示 GUI 界面并进行配置！<br>根据每一个选项的字面意思（不懂英文的自行翻译）来进行配置。<br>大多数的功能和配置都会影响固件的大小从而影响路由器硬盘空间的占用，因此如果添加过多的功能和软件包则会造成固件大小和实际安装后的大小过大！  </p>
+<p>对于部分双分区的设备而言，由于其固件可能主要使用第二个分区作为系统分区，第一个分区大小较小，因此无法安装较大的 initramfs 映像，从而无法正常启动 initramfs 映像（这个的影响会写在后面）。</p>
+<h3 id="下载源码-x2F-Download-Souce"><a href="#下载源码-x2F-Download-Souce" class="headerlink" title="下载源码 &#x2F; Download Souce"></a>下载源码 &#x2F; Download Souce</h3><p>根据你上一步的配置，下载编译需要的源码（包括软件包），这步操作将减少编译时因下载错误造成的编译失败并且节省编译时间。<br>使用命令：<br><code>make download -j【CPU线程数】 V=s</code>  【<br>请根据自己电脑的 CPU 来设置，例如本人的这条命令为：<br><code>make download -j12 V=s</code><br>由于网络环境影响，有时会下载失败或卡住，这时可以通过“Ctrl + C”（<code>^C</code>）快捷键终止操作，执行下面的命令 <em>删除下载临时文件</em> 后再次执行上面的命令继续下载。<br><code>rm -rf tmp/</code><br>小技巧：有时候无法通过 “curl” 工具下载特定文件或者自动下载的文件地址不正确&#x2F;失效导致一直下载失败，这时可以直接利用搜索引擎搜索需要下载的文件名下载到电脑后放到位于 OpenWrt 源码目录内 <code>dl/</code> 目录下，并且删除下载临时文件后继续执行下载命令直到完全正常（无报错）。<br><em>推荐多执行几次，确保所需软件包的源码下载正确、完整</em>。</p>
+<h3 id="编译-x2F-Compiling"><a href="#编译-x2F-Compiling" class="headerlink" title="编译 &#x2F; Compiling"></a>编译 &#x2F; Compiling</h3><p>官方推荐使用单线程编译（<code>make -j1 V=s</code>），这样会让错误显示在最底部（不同线程执行命令的顺序不同，因此错误信息返回的时间也不同，有可能导致错误信息被其他线程的正确信息推到终端后面）<br>开始前的建议：检查位于 OpenWrt 源码目录内 <code>dl/</code> 目录下下载的源文件（文件大小、哈希值等），通常文件大小小于 1M 的源码文件是下载错误的，建议重新下载。（例如：<code>php 8.1.3</code> 为 11.7M，Linux 显示为 12M）<br>我个人推荐：<br>使用全线程编译，当遇到错误终止后再次多线程编译（可能解决玄学问题，但我没遇到），同一问题没有消失查看错误：有明显报错信息的，根据报错信息解决。没有明显报错信息的，换单线程编译查看错误（<code>make -j1 V=sc</code>）。<br>目前我遇到的错误和解决方案：</p>
+<ol>
+<li>修改修补文件后，内核无法编译成功。原因：修补文件“块”内容的语法错误。报错后待编译程序自动中止后修正修补文件的语法错误，随后可继续多线程编译。</li>
+<li>同一个文件，但两个软件包均提供了。报错自动中止后重新配置 OpenWrt，冲突的软件包二选一（OpenWrt 自带的软件包优先保留（为了兼容性），但也可选择替换，一般不会出现问题）。</li>
+</ol>
+<p>使用命令进行编译：<br><code>make -j12 V=s</code><br>根据我的电脑配置，最后编译成功实际花费时间（取决于功能和软件包的数量）：34 分钟。</p>
+<p>因为使用的是 WSL，存在性能损耗，因此实际编译速度应该更快一点。</p>
+<h2 id="错误与解决（编译时）-x2F-Error-Solutions-Compiling"><a href="#错误与解决（编译时）-x2F-Error-Solutions-Compiling" class="headerlink" title="错误与解决（编译时）&#x2F; Error Solutions (Compiling)"></a>错误与解决（编译时）&#x2F; Error Solutions (Compiling)</h2><p>这里仅说明<strong>我遇到的问题</strong>，我没遇到的也不知道，也不能乱说。</p>
+<h3 id="内核编译错误-x2F-Error-of-Kernel-Compiling"><a href="#内核编译错误-x2F-Error-of-Kernel-Compiling" class="headerlink" title="内核编译错误 &#x2F; Error of Kernel Compiling"></a>内核编译错误 &#x2F; Error of Kernel Compiling</h3><p>这种错误通常是 Linux 内核文件在编译时发生错误，这时需要检查是否修改过内核源码文件和修补文件。<br>如果修改过，则进行检查，检查修改过的文件语法、文件名是否有问题，更改的内容的语法是否有问题（比如是否缺少符号，“头”指定的新的行数是否与“块”中写入的相等）。<br>例如：<br>原来修补文件的“头”是：<br><code>@@ -10,11 +12,15 @@ static struct example</code><br>意思为从第十行删去11行，随后从第十二行添加<em>15</em>行。如果增加&#x2F;删除了修补文件“块”中的任何一行，则上方代码中加粗的数字应当对应增加&#x2F;减少行数。</p>
+<h3 id="软件包编译错误-x2F-Error-of-Package-Compiling"><a href="#软件包编译错误-x2F-Error-of-Package-Compiling" class="headerlink" title="软件包编译错误 &#x2F; Error of Package Compiling"></a>软件包编译错误 &#x2F; Error of Package Compiling</h3><p>这种错误通常是：</p>
+<ol>
+<li>选中的软件包中的部分文件相互冲突。</li>
+<li>玄学问题。</li>
+</ol>
+<p>对于第 1 种问题，我们需要查看错误日志，找到对应提示的文件。<br>例如提示（大概意思）：“软件包：XXX 无法创建文件 ABC，因为 YYY 也提供了这个文件”。<br>这个时候需要重新配置 OpenWrt，在冲突的软件包二选一。</p>
+<p>对于第 2 种问题，可能是<strong>下载的软件包源码文件有问题</strong>或<strong>莫名其妙出现这种情况</strong><br>我在用 Fedora 35 编译的时候会有莫名其妙的问题，但使用 Ubuntu 则一次性编译成功，所以请尽量使用 Ubuntu 系统进行编译。<br>最好的方法是再次执行编译，大多时候这种问题就会消失，但如果还不消失，则需要执行下面的命令（每个命令我会用“#”符号在末尾注释）。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">rm -rf tmp/                                 # 清空make download的缓存（临时文件）</span><br><span class="line">rm -rf dl/【提示编译失败的软件包的名字】&lt;TAB&gt;    # 删除无法编译的软件包源码，&lt;TAB&gt;表示按键盘的“TAB键”</span><br><span class="line">make download -j【CPU线程数】V=s              # 重新下载缺少的软件包源码</span><br><span class="line">make -j1 V=sc                               # “单线程”编译，显示全部错误日志</span><br></pre></td></tr></table></figure>
+
+<p>随后观察是否仍有错误，如果问题消失则可以按需求使用“Ctrl + C”终止后再次多线程编译。<br>欢迎补充相关的编译问题。</p>
+<h2 id="FAQ-x2F-Question-and-Answer"><a href="#FAQ-x2F-Question-and-Answer" class="headerlink" title="FAQ &#x2F; Question and Answer"></a>FAQ &#x2F; Question and Answer</h2><ol>
+<li>软件包<br>Q：为什么我没有添加某个软件包、库，在编译的时候自动开始下载编译？<br>A：部分软件包<strong>编译时</strong>依赖于其他软件包、库和一些编程语言，这种情况使用提前下载源码文件的命令是无法下载的。如 AdGuardHome 软件包。其编译时依赖于 php、node.js、golang 等语言，因此编译过程中会自动下载这些语言的源码并编译。</li>
+<li>刷机<br> Q：我定制好了固件，接下来怎么刷？<br> A：对于路由器刷机，我们一般推荐使用下面的方案：<br> 刷入 Breed 固件，通过 Breed 固件刷入系统。Breed 固件可以保证路由器不论怎么刷机都不会刷坏。但如果在刷入 Breed 固件的过程操作失败，那么只能通过串口刷机救砖，如果厂家没有在路由器上提供串口端口，则只能通过编程器直刷闪存。因此风险与收益均较高。<br> 进入 Breed 固件，在控制台页面选择 Sysupgrade 固件刷入，重启。<br> <strong>对于特殊设备，刷入方式不同，请自行查找确认设备为普通设备。本文末仅有少量特殊设备的刷入方案。</strong></li>
+</ol>
+<h2 id="其他-x2F-Others"><a href="#其他-x2F-Others" class="headerlink" title="其他 &#x2F; Others"></a>其他 &#x2F; Others</h2><h3 id="OpenWrt-的一些功能实现-x2F-Feature-realization"><a href="#OpenWrt-的一些功能实现-x2F-Feature-realization" class="headerlink" title="OpenWrt 的一些功能实现 &#x2F; Feature realization"></a>OpenWrt 的一些功能实现 &#x2F; Feature realization</h3><p>（欢迎大家补充）</p>
+<ol>
+<li>更改默认的 IP 地址：<br>OpenWrt 默认的 IP 地址是 <code>192.168.1.1</code>，但对于多个子网或多台路由器的网络来说这可能不是很好。<br>使用命令：<br><code>uci set network.lan.ipaddr=&#39;【你要修改为的 IP 地址】&#39; &amp;&amp; uci commit network</code><br>然后重新启动路由器即可。</li>
+</ol>
+<h3 id="OpenWrt-问题交流-x2F-Communication"><a href="#OpenWrt-问题交流-x2F-Communication" class="headerlink" title="OpenWrt 问题交流 &#x2F; Communication"></a>OpenWrt 问题交流 &#x2F; Communication</h3><p>首先请自行使用搜索引擎如 Google、Bing 等对你的问题进行搜索并查找解决方案，若搜索引擎没有解决方案或提供的解决方案不适用&#x2F;无效，再去询问别人。</p>
+<p>关于询问别人：<br>如何询问？在哪询问？<br>除非<strong>明确知道</strong>对方是中国人，否则请使用<strong>英语</strong>交流（不会英语或英语不好的人请使用翻译软件，比你手打、自己编要好得多）。应尽可能<strong>简要</strong>的表述你的问题，如果可能还应告知对方你尝试了哪些解决方案（但没有用）。最重要的一点：<strong>请有礼貌</strong>。别人没有责任和义务去帮助你同时别人也不是神仙，解决问题主要靠自己，并且非必要不要告诉别人你是哪个国家的，不然你或多或少都代表了一个国家的人，尽管你没有资格。<br>这个问题其实很好理解，在别人不了解某个国家的人是怎样的，你就很容易给别人树立某个国家的人的形象。</p>
+<p>对于第三方软件包的问题，<strong>首先</strong>去它的讨论社区或 Issues，如 Github Issue，开发者提供的 IRC 频道或讨论组。如果没有讨论区域，再去 OpenWrt 的讨论社区询问，询问时应当告知别人你的问题是第三方软件包的问题。</p>
+<p>对于 OpenWrt 的问题，可以去 OpenWrt 提供的官方 <a href="https://openwrt.org/irc">IRC 频道页面</a> 查找适合你的问题的频道。对于重大问题（如代码漏洞，BUG），可以在 OpenWrt 的 Github 源码仓库提交 Issue。（一般你也不知道是 BUG 还是你的问题，所以请直接去 IRC 频道询问）。</p>
+<h2 id="特殊设备问题解决-x2F-Special-Device-Problem-Solutions"><a href="#特殊设备问题解决-x2F-Special-Device-Problem-Solutions" class="headerlink" title="特殊设备问题解决 &#x2F; Special Device Problem Solutions"></a>特殊设备问题解决 &#x2F; Special Device Problem Solutions</h2><h3 id="小米路由-3G（R3G）-x2F-Xiaomi-Mi-Router-3G"><a href="#小米路由-3G（R3G）-x2F-Xiaomi-Mi-Router-3G" class="headerlink" title="小米路由 3G（R3G） &#x2F; Xiaomi Mi Router 3G"></a>小米路由 3G（R3G） &#x2F; Xiaomi Mi Router 3G</h3><p>小米路由 3G 为双分区设备，因此安装步骤略微复杂。<br>以提前刷入 Breed 固件为基础。进入 Breed 固件控制台页面，选择 OpenWrt <strong>官方编译</strong>的 initramfs 固件，刷入。重启后，在 OpenWrt 的 LuCI Web 控制台页面，选择“系统 &gt; 备份&#x2F;升级”，随后在“刷写新的固件”选项中，选择 Sysupgrade 映像刷入。重启后直接进入 Breed 控制台页面，添加环境变量 <code>xiaomi.r3g.bootfw</code> 值为 <code>2</code> （设置启动的分区为第二分区）重启即可。</p>
+<p>首先在 Breed 中刷入的固件被刷入第一分区，第一分区大小较小，无法容纳较大容量的固件，因此需要将第一分区刷入较小的 initramfs 固件（官方编译），由于自己定制的 OpenWrt 固件或多或少都会添加较多的软件包，因此大小较大，所以刷入后无法正常启动。进入 LuCI Web 控制台刷入的固件会被直接刷入第二分区，因此设置环境变量启动第二分区后重启即可。</p>
+]]></content>
+      <tags>
+        <tag>OpenWrt</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>公钥基础设施的搭建与维护(基于 OpenSSL)</title>
+    <url>/2022/06/02/%E5%85%AC%E9%92%A5%E5%9F%BA%E7%A1%80%E8%AE%BE%E6%96%BD%E7%9A%84%E6%90%AD%E5%BB%BA%E4%B8%8E%E7%BB%B4%E6%8A%A4-%E5%9F%BA%E4%BA%8E-OpenSSL/</url>
+    <content><![CDATA[<p>最后更新：<strong>2022&#x2F;06&#x2F;02</strong><br>最后校对：<strong>2022&#x2F;06&#x2F;02</strong></p>
+<p>本文基于环境：</p>
+<p>操作系统：<code>Windows 11 Professional Workstation 22581</code><br>OpenSSL：<code>OpenSSL 1.1.1o</code></p>
+<p>阅读本文前须知：</p>
+<ol>
+<li>本文中不包含对 OpenSSL 配置文件的介绍；</li>
+<li>文章目录仅作分类，不保证可以正确跳转；</li>
+<li>关于“主题信息”和“主体信息”，前者包含于后者；</li>
+<li>除“公钥基础设施搭建与技术细节”外，所有地方的代码仅作示例，如需使用请根据需求修改；</li>
+<li>文中所述“软件”均包含操作系统。</li>
+</ol>
+<h2 id="基础知识-x2F-Basic"><a href="#基础知识-x2F-Basic" class="headerlink" title="基础知识 &#x2F; Basic"></a>基础知识 &#x2F; Basic</h2><h3 id="概论-x2F-Generality"><a href="#概论-x2F-Generality" class="headerlink" title="概论 &#x2F; Generality"></a>概论 &#x2F; Generality</h3><p><strong>公钥基础设施</strong>（Public Key Infrastructure）简称“PKI”。公钥基础设施是用于提供可信服务、数字证书，管理公钥加密的软硬件、结构与角色的集合。<br>公钥基础设施包括：<em>证书颁发机构</em>（Certificate Authority）、<em>证书注册审批机构</em>（Registration Authority）。<br>大多数可以提供可信服务和数字证书的实体均有其自己的完整的公钥基础设施。</p>
+<h4 id="数字证书-x2F-Certificate"><a href="#数字证书-x2F-Certificate" class="headerlink" title="数字证书 &#x2F; Certificate"></a>数字证书 &#x2F; Certificate</h4><p><strong>数字证书</strong>（Digital Certificate）简称“证书”。数字证书为符合 X.509 格式，ASN.1 表示方法，IETF 标准与 RFC 文件规定的数据。数字证书分为不同版本，截至目前共有三个版本（版本 1、版本 2、版本 3）。<br>其结构如下：</p>
+<ul>
+<li>数字证书<ul>
+<li>基本部分</li>
+<li>版本</li>
+<li>序列号</li>
+<li>签名及算法标识符</li>
+<li>颁发者主题信息</li>
+<li>有效期<ul>
+<li>开始日期</li>
+<li>结束日期</li>
+</ul>
+</li>
+<li>使用者主题信息</li>
+<li>公钥及算法标识符</li>
+<li>颁发者唯一标识符（自版本 2 起）</li>
+<li>使用者唯一标识符（自版本 2 起）</li>
+<li>扩展部分（自版本 3 起）</li>
+<li>基本约束</li>
+<li>密钥用法</li>
+<li>（其他扩展）</li>
+</ul>
+</li>
+</ul>
+<p>目前非特别老旧的操作系统均支持 V3 版本证书，绝大多数的常见证书为 V3 版本证书。<br>扩展部分可以添加除了标准、规范定义的扩展外的自定义扩展。扩展部分中的扩展使用 OID 定义。<br>证书扩展部分中所有的扩展在技术层面上均可以设置为<strong>关键扩展</strong>，关键扩展的作用为告知处理证书的软件这个扩展的信息必须被加载和处理。通常，处理关键扩展信息的方法内置于软件代码中，正因如此，除非关键扩展为规范定义的已知扩展，否则软件无法处理扩展并会将错误信息返回给用户。<strong>证书中的一些扩展必须设置为关键扩展</strong>。</p>
+<p><img src="https://s2.loli.net/2022/04/06/vNQsLAJ2lI7CD4M.png" alt="图片（Windows 下的数字证书）">  </p>
+<h4 id="证书吊销列表-x2F-Certificate-Revokation-List"><a href="#证书吊销列表-x2F-Certificate-Revokation-List" class="headerlink" title="证书吊销列表 &#x2F; Certificate Revokation List"></a>证书吊销列表 &#x2F; Certificate Revokation List</h4><p><strong>证书吊销列表</strong>（Certificate Revokation List）简称“CRL”。其与可信列表一样同属于列表，但可信列表可能包含证书吊销列表，可将证书吊销列表理解为“不可信列表”。证书吊销列表与证书颁发机构证书一一对应，由证书颁发机构签发。证书吊销列表中存放有被吊销的证书信息，软件会从中检查这些信息来识别无效的证书。<br>证书吊销列表为符合 X.509 格式，ASN.1 表示方法，IETF 标准与 RFC 文件规定的数据。证书吊销列表也分为不同的版本，截至目前共有二个版本（版本 1、版本 2）。<br>其结构如下：</p>
+<ul>
+<li>证书吊销列表<ul>
+<li>基本部分</li>
+<li>版本</li>
+<li>颁发者主题信息</li>
+<li>有效期<ul>
+<li>生效日期</li>
+<li>下一次更新日期</li>
+</ul>
+</li>
+<li>签名及算法标识符</li>
+<li>扩展部分</li>
+<li>授权密钥标识符</li>
+<li>CRL 数字</li>
+<li>（其他扩展）</li>
+</ul>
+</li>
+</ul>
+<p>证书吊销列表扩展部分中所有的扩展在技术层面上均可以设置为<strong>关键扩展</strong>，关键扩展的作用为告知处理证书吊销列表的软件这个扩展的信息必须被加载和处理。通常，处理关键扩展信息的方法内置于软件代码中，正因如此，除非关键扩展为规范定义的已知扩展，否则软件无法处理扩展并会将错误信息返回给用户。<strong>证书中的一些扩展必须设置为关键扩展</strong>。</p>
+<p>由于证书吊销列表的数据大小与证书颁发机构吊销的证书数量成正相关，随着时间推移会放大传输证书吊销列表所需要的带宽和成本，因此 Google 积极推行 OCSP 协议来验证证书、证书链。<br>但现在的证书颁发机构更多采用“多证书吊销列表”或<em>增量型证书吊销列表</em>，前者被更多的采用。增量型证书吊销列表可以作为现有证书吊销列表的扩充，由证书吊销列表中的扩展指定。证书颁发机构在颁发证书时，可以预先将增量型证书吊销列表内置与证书中。需要吊销证书时，直接发布增量型证书吊销列表。但也可以将证书颁发机构颁发的证书进行划分，让某一时间段的证书均采用某个证书吊销列表，需要吊销证书时仅在该吊销列表中添加证书信息，同样，其它证书吊销列表不受影响。</p>
+<p>在 Windows 操作系统中，优先使用证书吊销列表。</p>
+<p><img src="https://s2.loli.net/2022/04/06/vNQsLAJ2lI7CD4M.png" alt="Windows 下的证书吊销列表">  </p>
+<h4 id="OID-x2F-Object-Identifier"><a href="#OID-x2F-Object-Identifier" class="headerlink" title="OID &#x2F; Object Identifier"></a>OID &#x2F; Object Identifier</h4><p><strong>OID</strong>（Object Identifier）即“对象标识符”。是用于无歧义表示一个对象的编码，其使用由区间 (0, 16000000) 内的数构成的节点连接而成（如：1.3.8.155641.2.1）。<br>每个节点分别表示其一个对象，节点后跟的节点为子节点。</p>
+<h3 id="证书颁发机构-x2F-Certificate-Authority"><a href="#证书颁发机构-x2F-Certificate-Authority" class="headerlink" title="证书颁发机构 &#x2F; Certificate Authority"></a>证书颁发机构 &#x2F; Certificate Authority</h3><p><strong>证书颁发机构</strong>（Certificate Authority）简称“CA”。证书颁发机构是用于向用户提供一个受信任的根，来保护用户的活动（网络通信、身份验证、合同签订、电子商务等）的角色。证书颁发机构必须保证自己的安全性、公正性、可信性。<br>一个证书颁发机构可以有多个受信任的根，以便于管理和向用户提供高安全性、高保密性的服务。公钥基础设施的所有认证均建立在<strong>证书链</strong>的基础上。</p>
+<p><strong>证书链</strong>（Certificates Chain）是由多个证书构成的证书序列结构。其由证书颁发机构证书开始，<em>最终实体证书</em>结束，用于确保最终实体证书是合法有效的。证书链开始的证书颁发机构（证书），我们称为<em>根证书颁发机构</em>（证书）。根证书颁发机构（证书）与最终实体（证书）中间的所有级别证书颁发机构（均为证书颁发机构证书）我们称为<em>中间证书颁发机构</em>（证书）。最终实体证书（用户证书）是整条证书链的结束，也是用户保留有私钥的唯一一级证书。同时，<strong>最终实体证书不能用于颁发证书</strong>。</p>
+<p>通常情况下，证书颁发机构为了确保其下证书链的可信度、根证书颁发机构证书的安全，会使用由证书颁发机构<em>根证书</em>签发的二级证书颁发机构证书颁发最终实体证书（用户证书）。<br>部分证书颁发机构会向其他实体提供证书的签发权，比如向该组织签发二级（或其他级）的CA证书，甚至允许该实体继续签发子证书颁发机构证书。<br>因此我们经常可以看到的证书链通常是下列三种结构（未写明“第三方”的证书颁发机构均由根证书颁发机构所属实体负责）：</p>
+<ul>
+<li>根证书颁发机构<ul>
+<li>中间证书颁发机构</li>
+<li>最终实体证书</li>
+</ul>
+</li>
+<li>根证书颁发机构<ul>
+<li>中间证书颁发机构（第三方）</li>
+<li>最终实体证书</li>
+</ul>
+</li>
+<li>根证书颁发机构<ul>
+<li>中间证书颁发机构（第三方）</li>
+<li>中间证书颁发机构（第三方）<ul>
+<li>最终实体证书</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>一个合格的证书颁发机构必须有撤销（吊销）、续订本证书颁发机构直接签发的各级证书的能力，同时必须具备符合规范，从而可以让用户、软件可以正常、正确的获取到证书信息的能力。<br>为了确保证书具备证书颁发机构所需要的要求，通常会在证书扩展中添加这些扩展: <em>授权密钥标识符</em>、<em>使用者密钥标识符</em>、<em>授权信息访问</em>、<em>CRL 分发点</em>、<em>增强型密钥用法</em>、<em>证书策略</em>。</p>
+<p>任何证书颁发机构必须严格管理、妥善保存直接隶属于本颁发机构的所有证书的私钥，对于用户而言，必须严格管理、拓展保存所有自己持有的证书的私钥。一旦证书颁发机构发现任何私钥泄露，证书颁发机构必须立刻吊销已泄露私钥的最终实体证书或证书颁发机构证书。否则证书颁发机构会失去安全性和可信性。<br>为了确保证书确实来自期望的证书颁发机构颁发，证书颁发机构需要使证书具有特定标识符，标识符必须是安全的，唯一的。常见的标识符有：<em>授权密钥标识符</em>、<em>使用者密钥标识符</em>、哈希值（证书“指纹”）。</p>
+<h4 id="根证书颁发机构证书-x2F-Root-CA-Certificate"><a href="#根证书颁发机构证书-x2F-Root-CA-Certificate" class="headerlink" title="根证书颁发机构证书 &#x2F; Root CA Certificate"></a>根证书颁发机构证书 &#x2F; Root CA Certificate</h4><p><strong>根证书颁发机构证书</strong>（Root Certificate）简称“根证书”。根证书颁发机构证书是<em>自签名</em>的证书颁发机构证书，是所有二级证书的颁发证书。<br>一个证书颁发机构的根证书是最重要的，也是最宝贵的。因为现有安全认证体系通常在其内部有一个包含其认为可信的根证书、最终实体证书的集合，这个集合称为<em>可信列表</em>。 在验证过程中，会对比证书链中的根证书是否包含于其的可信列表，若不包含则不信任基于此根证书的证书链。</p>
+<p>在 Windows 操作系统中，微软通过<em>注册表</em>来保存可信列表。因此在 Windows 操作系统中对可信列表进行操作（如增删根证书）的实质为注册表操作。同样，微软也在 Windows 操作系统也为此可信列表进行了功能扩展，来确保其可信列表内部根证书是由微软管理的。例如 Windows 操作系统可信列表内置的根证书包含: “密钥用法（属性）”、“扩展密钥用法（属性）”、“扩展的验证（属性）”等重要属性，也有一些不那么重要的属性如<em>友好名称</em>、<em>证书描述</em>。这些属性实现了标准规范中证书扩展的功能，但不是<em>证书扩展</em>。<br>通常被微软信任的证书颁发机构均内置于操作系统的可信列表中，由 Windows 操作系统自动安装的，因此在 Windows 操作系统中那些根证书颁发机构的根证书不使用<em>证书扩展</em>来控制，而是直接由可信列表的“属性”来控制。通过证书“属性”项指定的值可以被随时修改，而证书扩展指定的值则不可以。</p>
+<p>除此之外，微软的可信列表中的部分根证书还有一个特殊的属性：<em>扩展的验证（属性）</em>，它将实现扩展验证的证书功能。关于此属性的详细信息将在后面的小节中介绍。</p>
+<h4 id="扩展验证的证书-x2F-Extended-Verify-Certificate"><a href="#扩展验证的证书-x2F-Extended-Verify-Certificate" class="headerlink" title="扩展验证的证书 &#x2F; Extended Verify Certificate"></a>扩展验证的证书 &#x2F; Extended Verify Certificate</h4><p><strong>扩展验证</strong>（Extended Verify）简称“EV”。扩展验证指证书颁发机构对证书使用者进行了额外的身份验证并标识在证书内，同时证书颁发机构需要对签发扩展验证的证书的各级证书颁发机构证书的安全性提供最高级别的安全保障。<br>证书颁发机构的根证书直接决定能否颁发扩展验证的证书，而扩展验证的证书则必须符合标准规范。<br>例如在证书的基本部分中“使用者”扩展项的值就必须额外新增一些项及其对应的值，且部分新增项的值必须与部分原有项的值对应。</p>
+<p>如果一个证书颁发机构想要颁发扩展验证的 SSL 证书或 扩展验证的代码签名证书，二者均需要证书颁发机构的根证书在 Windows 可信列表中具有“扩展的验证”属性，并且前者还需包含于浏览器的可信列表（对于使用操作系统可信列表的浏览器（如：Internet Explorer）则不需要）。<br>如果扩展验证的证书不符合规范，那么他将不会发挥扩展验证的作用。</p>
+<h3 id="证书注册审批机构-x2F-Registration-Authority"><a href="#证书注册审批机构-x2F-Registration-Authority" class="headerlink" title="证书注册审批机构 &#x2F; Registration Authority"></a>证书注册审批机构 &#x2F; Registration Authority</h3><p><strong>证书注册审批机构</strong>（Registration Authority）简称“RA”。证书注册审批机构对申请证书颁发机构颁发证书的实体进行身份验证、审核，通常由证书颁发机构所属实体负责。证书注册审批机构可以理解为证书颁发机构颁发证书时的代理，通常申请某一证书颁发机构颁发证书时，会先提交给证书注册审批机构。</p>
+<h3 id="签名证书时间戳-x2F-Signed-Certificate-Timestamp"><a href="#签名证书时间戳-x2F-Signed-Certificate-Timestamp" class="headerlink" title="签名证书时间戳 &#x2F; Signed Certificate Timestamp"></a>签名证书时间戳 &#x2F; Signed Certificate Timestamp</h3><p><strong>签名证书时间戳</strong>（Signed Certificate Timestamp），简称“<strong>SCT</strong>”。签名证书时间戳技术的诞生致力于解决“证书透明度”，在此项技术提出前的时间，国际公认证书颁发机构 Diginotar、Comodo 遭到入侵，造成大量非法证书颁发。随后，Google 发现中国网络信息中心（CNNIC）未经一些域名持有主体授权，颁发了该域的非法证书。这些事件暴露出受信任的证书颁发机构颁发的证书可能被用于“中间人攻击”，因此 Google 提出了签名证书时间戳技术。</p>
+<p>现在，所有的扩展验证的证书均需提供签名证书时间戳，同时所有的 SSL 证书也必须包含签名证书时间戳。</p>
+<p>签名证书时间戳为符合 X.509 格式，ASN.1 表示方法，IETF 标准与 RFC 文件规定的数据。签名证书时间戳也分为不同的版本，截至目前共有一个版本（版本 1）。</p>
+<p>其数据结构如下：</p>
+<ul>
+<li>签名证书时间戳<ul>
+<li>版本</li>
+<li>日志 ID</li>
+<li>时间戳</li>
+<li>扩展部分</li>
+<li>签名</li>
+</ul>
+</li>
+</ul>
+<p>为了获取签名证书时间戳，证书颁发机构必须先颁发<em>预签发证书</em>，将其提交到<em>证书透明度日志</em>服务器，服务器将会对提交的证书进行记录。同时证书透明度日志服务器必须为可信的（证书透明度日志服务器需被提交至 Google，完成为期一年的测试）。</p>
+<p>通过证书透明度技术，任何域的主体在任何时间均可发现本域的证书情况（如是否存在其他证书颁发机构私自颁发的情况），也对证书颁发机构起到了很好的监督、约束。</p>
+<h2 id="数字证书与扩展-x2F-Certificate-and-Extension"><a href="#数字证书与扩展-x2F-Certificate-and-Extension" class="headerlink" title="数字证书与扩展 &#x2F; Certificate and Extension"></a>数字证书与扩展 &#x2F; Certificate and Extension</h2><p>现代基于数字证书的安全加密认证体系所使用的证书为 V3 版本证书，V3 证书最重要的一点即为其支持了扩展部分，从而可以通过在扩展部分添加指定扩展实现认证所需的特定功能。<br>下面会对此进行详细讲解，以便于自建公钥基础设施的证书颁发机构可以颁发符合标准规范的证书。</p>
+<p>需要注意，标准规定的数字证书扩展项的值支持的标识符仅有：URI，Email，RID，DNS，IP，otherName。其中 URI 仅支持未加密的协议（如 HTTP 而不是 HTTPS），部分软件层会对此进行扩充从而额外支持部分协议（如 HTTPS）但请不要使用此类协议！  </p>
+<h3 id="密钥标识符-x2F-Key-Identifier"><a href="#密钥标识符-x2F-Key-Identifier" class="headerlink" title="密钥标识符 &#x2F; Key Identifier"></a>密钥标识符 &#x2F; Key Identifier</h3><p>密钥标识符通常为证书公钥的哈希值，也可为证书的主题信息（用于根证书），由于主题信息可以随意填写，因此绝大多数位置均使用哈希值。</p>
+<h4 id="授权密钥标识符-x2F-Authority-Key-Identifier"><a href="#授权密钥标识符-x2F-Authority-Key-Identifier" class="headerlink" title="授权密钥标识符 &#x2F; Authority Key Identifier"></a>授权密钥标识符 &#x2F; Authority Key Identifier</h4><p><strong>授权密钥标识符</strong>（Authority Key Identifier），简称“AKI”，短名称为“authoritykeyIdentifier”，OID为 <code>2.5.29.35</code>，在 RFC 5280 中被定义，为<strong>非关键扩展</strong>。此扩展通常在所有证书中出现，用以标识和验证证书的颁发证书的主体信息，通常为颁发证书主题信息的哈希值，但也有例外（根证书中可能为明文主题信息）。</p>
+<p>在 OpenSSL 配置文件中添加下方代码来添加授权密钥标识符扩展：<br><code>authorityKeyIdentifier=keyid</code></p>
+<p><img src="https://s2.loli.net/2022/04/06/oQHzsSarlmVB8Yy.png" alt="图片（Windows 下授权密钥标识符扩展）"></p>
+<h4 id="主体密钥标识符-x2F-Subject-Key-Identifier"><a href="#主体密钥标识符-x2F-Subject-Key-Identifier" class="headerlink" title="主体密钥标识符 &#x2F; Subject Key Identifier"></a>主体密钥标识符 &#x2F; Subject Key Identifier</h4><p><strong>使用者密钥标识符</strong>（主体密钥标识符，Subject Key Identifier），简称“SKI”，短名称为“subjectkeyIdentifier”，OID为 <code>2.5.29.14</code>，在 RFC 5280 中被定义，为<strong>非关键扩展</strong>。此扩展通常在所有证书中出现，用以标识和验证证书的主体信息，为主题信息的哈希值。</p>
+<p>在 OpenSSL 配置文件中添加下方代码来添加使用者密钥标识符扩展：<br><code>subjectKeyIdentifier=hash</code></p>
+<p><img src="https://s2.loli.net/2022/04/06/GhsIolfp7KCjyJc.png" alt="图片（Windows 下使用者密钥标识符扩展）"></p>
+<h3 id="授权信息访问-x2F-Authority-Info-Access"><a href="#授权信息访问-x2F-Authority-Info-Access" class="headerlink" title="授权信息访问 &#x2F; Authority Info Access"></a>授权信息访问 &#x2F; Authority Info Access</h3><p><strong>授权信息访问</strong>（Authority Info Access）简称“AIA”，短名称为“authorityInfoAccess”，OID为 <code>1.3.6.1.5.5.7.1.1</code>，在 RFC 5280 中被定义，为<strong>非关键扩展</strong>。其用处为在证书中内嵌<em>证书颁发机构证书</em>和<em>联机证书状态协议</em>的位置信息。以便软件验证证书、证书链的合法、有效性。</p>
+<p>在 OpenSSL 配置文件中添加下方代码来添加授权信息访问扩展：</p>
+<p><code>authorityInfoAccess = OCSP;URI:http://ocsp.levimarvin.site:8080,caIssuers;URI:http://levimarvin.site/abc.crt</code></p>
+<p>如果证书中缺少此扩展，软件将无法建立、验证证书链。在 Windows 操作系统中，会提示用户：“Windows 缺少某些信息，无法验证该证书的颁发者。”</p>
+<p><img src="https://s2.loli.net/2022/04/06/sNAPn1EF7ZrJ8QT.png" alt="图片（Windows 下授权信息访问扩展）">  </p>
+<h4 id="联机证书状态协议-x2F-OCSP"><a href="#联机证书状态协议-x2F-OCSP" class="headerlink" title="联机证书状态协议 &#x2F; OCSP"></a>联机证书状态协议 &#x2F; OCSP</h4><p><strong>联机证书状态协议</strong>（Online Certificate Status Procotol）简称“OCSP”，短名称为“OCSP”，OID 为 <code>1.3.6.1.5.5.7.48.1</code>，在 RFC 5280 中被定义。联机证书状态协议为软件提供了快速、安全的证书验证协议。通过向证书中指定的<em>OCSP 响应器</em>发送请求，软件即可获取到该证书的状态。<br>联机证书状态协议大大缓解了使用证书吊销列表的压力，因此越来越多的软件优先选择使用联机证书状态协议。</p>
+<p><strong>OCSP 响应器</strong>（OCSP Responder）是运行 OCSP 并返回 OCSP 消息的服务端，用于处理从客户端发来的 OCSP，并查询 OCSP 消息中的证书在证书颁发机构的状态，同时可以告知客户端证书的颁发者信息，从而可以不用添加<em>证书颁发机构颁发者</em>（但仍然建议添加作为 OCSP 服务端不可用时的备用方案）。OCSP 协议由 Google 推行，因此在基于 Chrome 内核的浏览器中，优先使用 OCSP 来检查证书的状态。</p>
+<p>一个证书的授权信息访问扩展可以有多个“联机证书状态协议”，用于指定在不同的网络位置上获取信息。与证书吊销列表不同，联机证书状态协议响应器可以是共用的，只需要在响应器内部对收到的请求进行分类处理。</p>
+<p>需要注意：</p>
+<ol>
+<li>联机证书状态协议需要专用的签名证书来对发送的内容和传输过程进行加密；</li>
+<li>联机证书状态协议服务端返回的结果几乎为实时响应，除非设置与下一次请求的间隔，否则下次客户端请求的时间为实时；</li>
+<li>联机证书状态协议服务端收到请求后会自动完成操作，无需手动发布响应结果等类的文件。</li>
+</ol>
+<h4 id="证书颁发机构颁发者-x2F-Certificate-Authority-Issuers"><a href="#证书颁发机构颁发者-x2F-Certificate-Authority-Issuers" class="headerlink" title="证书颁发机构颁发者 &#x2F; Certificate Authority Issuers"></a>证书颁发机构颁发者 &#x2F; Certificate Authority Issuers</h4><p><strong>证书颁发机构颁发者</strong>（Certificate Authority Issuers）简称“CAI”，短名称为“caIssuers”，OID 为 <code>1.3.6.1.5.5.7.48.2</code>，在 RFC 5280 中被定义。证书颁发机构颁发者为软件提供了该证书颁发者的位置，用于软件建立证书链，验证证书颁发者。</p>
+<p>一个证书的授权信息访问扩展可以有多个“证书颁发机构颁发者”，用于指定在不同的网络位置上获取信息。</p>
+<h3 id="CRL-分发点-x2F-CRL-Distribution-Points"><a href="#CRL-分发点-x2F-CRL-Distribution-Points" class="headerlink" title="CRL 分发点 &#x2F; CRL Distribution Points"></a>CRL 分发点 &#x2F; CRL Distribution Points</h3><p><strong>CRL 分发点</strong>（CRL Distribution Points）简称“CDP”，短名称为“crlDistributionPoints”，OID 为 <code>2.5.29.31</code>，在 RFC 5280 中被定义，为<strong>非关键扩展</strong>，可设置为<strong>关键扩展</strong>。其用处为在证书中内嵌<em>证书吊销列表</em>的位置信息。以便软件验证证书、证书链的有效性。<br>在此扩展中可以指定多个证书吊销列表文件的位置。</p>
+<p>在 OpenSSL 配置文件中添加下方代码来添加 CRL 分发点扩展：<br><code>crlDistributionPoints = URI:http://levimarvin.site/abc.crl</code></p>
+<p>添加 CRL 分发点扩展中多个 CRL 分发位置：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">crlDistributionPoints.0 = URI:http://levimarvin.site/abc1.crl</span><br><span class="line">crlDistributionPoints.1 = URI:http://levimarvin.site/abc2.crl</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://s2.loli.net/2022/04/06/CmZesnG4uych5WD.png" alt="图片（Windows 下 CRL 分发点扩展）">  </p>
+<h3 id="增强型密钥用法-x2F-Extended-Key-Usage"><a href="#增强型密钥用法-x2F-Extended-Key-Usage" class="headerlink" title="增强型密钥用法 &#x2F; Extended Key Usage"></a>增强型密钥用法 &#x2F; Extended Key Usage</h3><p><strong>增强型密钥用法</strong>（Extended Key Usage）简称“<strong>EKU</strong>”，短名称为“extendedKeyUsage”，OID 为 <code>2.5.29.37</code>，在 RFC 5280 中被定义，为<strong>非关键扩展</strong>，可设置为<strong>关键扩展</strong>。</p>
+<p>增强型密钥用法扩展对证书的预期目的进行了细分，证书添加此扩展后，将不能用于未在此扩展中指定的目的。</p>
+<p>在 OpenSSL 配置文件中添加下方代码来添加增强型密钥用法扩展：<br><code>extendedKeyUsage=serverAuth, clientAuth, timeStamping, msSGC, nsSGC, ipsecEndSystem, ipsecTunnel, ipsecUser, iKEIntermediate, msSmartcardLogin, id-kp-eapOverPPP, id-kp-eapOverLAN, pkInitKDC, pkInitClientAuth</code></p>
+<h3 id="主体可选名称-x2F-Subject-Alternative-Name"><a href="#主体可选名称-x2F-Subject-Alternative-Name" class="headerlink" title="主体可选名称 &#x2F; Subject Alternative Name"></a>主体可选名称 &#x2F; Subject Alternative Name</h3><p><strong>主体可选名称</strong>（使用者可选名称，Subject Alternative Name）,短名称为“subjectAltName”，OID 为 <code>2.5.29.17</code>，在 RFC 5280 中被定义，为<strong>非关键扩展</strong>。其通常用于 SSL 证书，标识某一证书可以用在的域、IP、邮箱等。</p>
+<p>在 OpenSSL 配置文件中添加下方代码来添加主体可选名称扩展：<br><code>subjectAltName = DNS:levimarvin.site</code></p>
+<p>添加主体可选名称扩展中多个主体可选名称：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">subjectAltName = DNS:levimarvin.site, DNS:levimarvin.site, IP:127.0.0.1</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://s2.loli.net/2022/04/06/B5CjYbMF8xSiwc3.png" alt="图片（Windows 下的主体可选名称扩展）"></p>
+<h3 id="SCT-列表-x2F-SCT-List"><a href="#SCT-列表-x2F-SCT-List" class="headerlink" title="SCT 列表 &#x2F; SCT List"></a>SCT 列表 &#x2F; SCT List</h3><p><strong>SCT 列表</strong>（SCT List）简称“SL”，短名称为“ct<em>precert</em>scts”，OID 为 <code>1.3.6.1.4.1.11129.2.4.2</code>，在 RFC 6962 中被定义，为<strong>非关键扩展</strong>。其作用为在证书中内嵌证书的透明度信息。</p>
+<p>证书透明度日志服务器需要单独编译与运行现有的开源证书透明度日志服务器，或自己编写一个。</p>
+<p>在 OpenSSL 配置文件中添加下方代码来添加 SCT 列表（添加的 DER 编码二进制数据来自于证书透明度日志服务器返回的数据）：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ct*precert*scts=DER:04:82:01:6c:01:6a:00:77:00:...</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://s2.loli.net/2022/04/06/ZN3O8Buq7EJMGFk.png" alt="图片（Windows 下的 SCT 列表扩展）"></p>
+<h3 id="“基本约束”与“密钥用法”-x2F-Basic-Constraints-and-Key-Usage"><a href="#“基本约束”与“密钥用法”-x2F-Basic-Constraints-and-Key-Usage" class="headerlink" title="“基本约束”与“密钥用法” &#x2F; Basic Constraints and Key Usage"></a>“基本约束”与“密钥用法” &#x2F; Basic Constraints and Key Usage</h3><p><strong>基本约束</strong>（Basic Constraints），短名称为“basicConstraints”，OID 为 <code>2.5.29.19</code>，在 RFC 5280 中被定义，为<strong>关键扩展</strong>。其作用为对证书作出基本限制：</p>
+<ol>
+<li>证书类型（证书颁发机构证书&#x2F;最终实体证书）</li>
+<li>证书颁发机构长度（可选）</li>
+</ol>
+<p>通过证书中的基本约束，证书颁发机构可以限制子证书颁发机构仅颁发最终实体证书。</p>
+<p>在 OpenSSL 配置文件中添加下方代码来添加基本约束（关键）：<br><code>basicConstraints=critical,CA:FALSE</code></p>
+<p><strong>密钥用法</strong>（Key Usage），短名称为“keyUsage”，OID 为 <code>2.5.29.15</code>，在 RFC 5280 中被定义，为<strong>关键扩展</strong>。</p>
+<p><img src="https://s2.loli.net/2022/04/06/gD9aF73cNrnYSvP.png" alt="图片（Windows 下的密钥用法）"></p>
+<p>密钥用法可以对证书的用途作出基本限制，但如需更加细分的限制，则需要额外添加增强型密钥用法扩展。</p>
+<p>在 OpenSSL 配置文件中添加下方代码来添加密钥用法：<br><code>keyUsage=critical,digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment, keyAgreement, encipherOnly, decipherOnly</code></p>
+<p><img src="https://s2.loli.net/2022/04/06/t7jBZYCvXi9zJ5n.png" alt="图片（Windows 下的基本约束）"></p>
+<h3 id="证书策略-x2F-Certificate-Policies"><a href="#证书策略-x2F-Certificate-Policies" class="headerlink" title="证书策略 &#x2F; Certificate Policies"></a>证书策略 &#x2F; Certificate Policies</h3><p><strong>证书策略</strong>（Certificate Policies），短名称为“certificatePolicies”，OID 为 <code>2.5.29.32</code>，在 RFC 5280 中被定义，为<strong>非关键扩展</strong>。</p>
+<p>通过证书的证书策略扩展，证书颁发机构可以让用户知情证书颁发机构采取何种策略、方式、保障来保护其证书颁发机构的安全性和颁发的证书。</p>
+<p>证书策略扩展项的值可以由多个，在值中，一个策略 ID 可以对应多个证书策略地址，可以有多个策略 ID。策略 ID 可以为任意的 OID。</p>
+<p>在 OpenSSL 配置文件中添加下方代码来添加证书策略扩展：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">certificatePolicies=ia5org,@certpol0*sect</span><br><span class="line"></span><br><span class="line">[certpol0*sect]</span><br><span class="line">policyIdentifier=1.2.3.4.5</span><br><span class="line">CPS.0=http://levimarvin.site/CPS</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://s2.loli.net/2022/04/06/geidwV495SKmIyk.png" alt="图片（Windows 下的证书策略扩展）"></p>
+<h2 id="搭建与技术细节-x2F-Build-and-Technical-Details"><a href="#搭建与技术细节-x2F-Build-and-Technical-Details" class="headerlink" title="搭建与技术细节 &#x2F; Build and Technical Details"></a>搭建与技术细节 &#x2F; Build and Technical Details</h2><h3 id="证书颁发机构-x2F-Certificate-Authority-1"><a href="#证书颁发机构-x2F-Certificate-Authority-1" class="headerlink" title="证书颁发机构 &#x2F; Certificate Authority"></a>证书颁发机构 &#x2F; Certificate Authority</h3><h4 id="基本要求-x2F-Basic"><a href="#基本要求-x2F-Basic" class="headerlink" title="基本要求 &#x2F; Basic"></a>基本要求 &#x2F; Basic</h4><p>证书颁发机构需要一个注册过的 OID 用于其身份、策略、目的标识。<br>一般注册到的 OID 有两种：</p>
+<ol>
+<li>2.23.0 根 OID 分配的子 OID</li>
+<li>1.3.6.1.4.1.0 根 OID 分配的子 OID</li>
+</ol>
+<p>前者为国家分配，后者为<a href="https://iana.org/">国际互联网代理成员管理局（IANA）</a>分配。<br>在中国，由<a href="https://oidchina.org.cn/">国家 OID 注册中心</a>分配。<br>由某一国家分配的 OID 在分配前，相应的管理局会对注册申请实体进行审查，但也正因如此，使用国家 OID 的证书颁发机构易受到实体注册国、OID 注册国的干涉，但由于会对其进行审查，可信度更高。<br>由国际互联网代理成员管理局（IANA）分配的 OID 在分配前，不会对申请实体进行审查，可信度与前者相比不高，但不易受到 OID 注册国的干涉。</p>
+<p>证书颁发机构需要可以提供服务且可以在国际上被访问的服务器来部署相关服务。如：HTTP&#x2F;HTTPS 服务器、OCSP 服务器、CT 日志服务器（如果你被国际公认可以没有）。</p>
+<p>使用 Nginx 等 Web 服务端可以部署 HTTP&#x2F;HTTPS 服务。<br>使用 OpenSSL 可以生成、签发证书，证书吊销列表和部署<strong>简单的</strong>OCSP 服务。</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 创建证书吊销列表</span><br><span class="line">openssl ca -gencrl -crldays 有效期（日） -cert CA证书.crt -keyfile CA证书私钥.key -md 算法（SHA*、MD*等） -out 输出文件.crl -config 配置文件.cnf</span><br><span class="line"># Tips:</span><br><span class="line"># &quot;-crldays&quot;可以被&quot;-crlhour&quot;替代，替代后的有效期单位则为小时。不推荐将有效期设置的太短，一周足够。否则CA需要频繁的生成、发布最新的CRL文件。</span><br><span class="line"># 算法可以为&quot;SHA1&quot;、&quot;SHA256&quot;、&quot;SHA384&quot;、&quot;SHA512&quot;、&quot;MD1&quot;、&quot;MD2&quot;、# &quot;MD5&quot;等等，有效即可。同时选择算法时也应考虑操作系统兼容性。</span><br><span class="line"></span><br><span class="line"># 运行 OCSP 服务器</span><br><span class="line">ocsp -index demoCA/index.txt -port 8080 -nmin 1 -rsigner oc.crt -rkey oc.key -CA CA的证书文件.crt -out 日志文件.log</span><br></pre></td></tr></table></figure>
+
+<p>需要注意：使用 OpenSSL 部署的服务依赖于 OpenSSL 的文本数据库。</p>
+<p>使用 Google 的 <a href="https://github.com/google/certificate-transparency-go">Certificate Transparency Go</a> 可以部署证书透明度日志服务。</p>
+<p>最好的解决方案是自己开发一个自动化的公钥基础设施系统。</p>
+<h4 id="数字证书-x2F-Certificate-1"><a href="#数字证书-x2F-Certificate-1" class="headerlink" title="数字证书 &#x2F; Certificate"></a>数字证书 &#x2F; Certificate</h4><p>所有的数字证书（根证书除外）必须包含前一大章节中所述的扩展，证书若使用哈希算法，则必须使用 SHA256 及以后的算法。如：sha256RSA。<br>现在越来越多的证书颁发机构使用<em>椭圆曲线算法</em>（如：ECDSA、ECDH），比传统的<em>非对称加密算法</em>所需成本更低，更加安全。</p>
+<p>目前世界上不存在绝对安全的加密算法与安全体系，随着科技进带来的算力提升与时间推移，现有的加密算法与安全体系终将淘汰。</p>
+<p>对于扩展验证的证书，其证书及证书链的根证书必须在软件中内置其注册过且分配用于扩展验证证书的 OID。</p>
+<p>对于加密 OCSP 响应的证书必须为专用的证书。该证书可以由证书颁发机构根证书签发，以便于对该根证书签发的所有证书颁发机构的所有 OCSP 响应签名。<br>由于 OCSP 响应证书不能包含授权信息访问扩展，CRL 分发点扩展，所以证书颁发机构无法控制 OCSP 证书，因此该证书的有效期必须控制在半年以内。</p>
+<p>OCSP专用证书必须有<em>OCSP不撤销检查</em>扩展，密钥用法仅可以包含:<br><code>Digital Signature, Non-Repudiation, Key Encipherment</code><br><em>增强型密钥用法</em>扩展必须仅包含“OCSP 签名”用法，此外证书也必须为最终实体证书。<br>某些情况下，为了使 Windows 操作系统兼容，可以再颁发一个 OCSP 证书，证书中包含<em>应用程序策略</em>扩展，策略标识符为“OCSP 签名”。</p>
+<h3 id="证书注册审批机构-x2F-Registration-Authority-1"><a href="#证书注册审批机构-x2F-Registration-Authority-1" class="headerlink" title="证书注册审批机构 &#x2F; Registration Authority"></a>证书注册审批机构 &#x2F; Registration Authority</h3><p>数字证书审批机构需要提供用户一个提交证书颁发申请的接口，并对来源于此接口的信息进行审核、处理，若符合公钥基础设施的要求，则向证书颁发机构提交，不符合则向用户告知。</p>
+<p>证书注册审批机构需要可以提供服务且可以在国际上被访问的服务器来部署相关服务。某些情况下，证书注册审批机构与证书颁发机构在同一服务器上。</p>
+<h2 id="维护与审计-x2F-Maintenance-and-Audit"><a href="#维护与审计-x2F-Maintenance-and-Audit" class="headerlink" title="维护与审计 &#x2F; Maintenance and Audit"></a>维护与审计 &#x2F; Maintenance and Audit</h2><p>根据国际上的标准和规范，证书颁发机构必须每隔一定周期向有注册资格的审计公司提交审计，用于确定证书颁发机构是否可以公平、公正的保障用户的信息安全。</p>
+<p>由于证书颁发机构根证书在整个认证体系中最重要，因此绝大多数的证书颁发机构均将其下的根证书颁发机构证书的私钥<strong>离线保存</strong>，用于保障安全。签发证书时，使用由根证书签发的下级证书颁发机构证书签发。</p>
+<p>证书颁发机构必须定期签发证书吊销列表，更新证书数据库并告知用户证书的状态。一旦任何证书发生私钥泄漏，根证书颁发机构必须在第一时间吊销该证书，做出报告公开并提交审计。</p>
+<p>证书颁发机构还应保障服务最高可用性，确保服务不会因意外中断。</p>
+]]></content>
+      <tags>
+        <tag>X509</tag>
+        <tag>OpenSSL</tag>
+      </tags>
+  </entry>
+</search>

@@ -20,35 +20,46 @@
     var CONFIG = {"hostname":"levimarvin.site","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="这里是日暮清林的博客，欢迎来玩！">
-<meta property="og:type" content="website">
-<meta property="og:title" content="博客 - 暮林网站群">
-<meta property="og:url" content="https://levimarvin.site/index.html">
+  <meta name="description" content="最后更新：2022&#x2F;06&#x2F;02最后校对：2022&#x2F;06&#x2F;02 本文基于环境： 操作系统：Windows 11 Professional Workstation 22581OpenSSL：OpenSSL 1.1.1o 阅读本文前须知：  本文中不包含对 OpenSSL 配置文件的介绍； 文章目录仅作分类，不保证可以正确跳转； 关于“主题信息”和“主体信息”，前">
+<meta property="og:type" content="article">
+<meta property="og:title" content="公钥基础设施的搭建与维护(基于 OpenSSL)">
+<meta property="og:url" content="https://levimarvin.site/2022/06/02/%E5%85%AC%E9%92%A5%E5%9F%BA%E7%A1%80%E8%AE%BE%E6%96%BD%E7%9A%84%E6%90%AD%E5%BB%BA%E4%B8%8E%E7%BB%B4%E6%8A%A4-%E5%9F%BA%E4%BA%8E-OpenSSL/index.html">
 <meta property="og:site_name" content="博客 - 暮林网站群">
-<meta property="og:description" content="这里是日暮清林的博客，欢迎来玩！">
+<meta property="og:description" content="最后更新：2022&#x2F;06&#x2F;02最后校对：2022&#x2F;06&#x2F;02 本文基于环境： 操作系统：Windows 11 Professional Workstation 22581OpenSSL：OpenSSL 1.1.1o 阅读本文前须知：  本文中不包含对 OpenSSL 配置文件的介绍； 文章目录仅作分类，不保证可以正确跳转； 关于“主题信息”和“主体信息”，前">
 <meta property="og:locale">
+<meta property="og:image" content="https://s2.loli.net/2022/04/06/vNQsLAJ2lI7CD4M.png">
+<meta property="og:image" content="https://s2.loli.net/2022/04/06/vNQsLAJ2lI7CD4M.png">
+<meta property="og:image" content="https://s2.loli.net/2022/04/06/oQHzsSarlmVB8Yy.png">
+<meta property="og:image" content="https://s2.loli.net/2022/04/06/GhsIolfp7KCjyJc.png">
+<meta property="og:image" content="https://s2.loli.net/2022/04/06/sNAPn1EF7ZrJ8QT.png">
+<meta property="og:image" content="https://s2.loli.net/2022/04/06/CmZesnG4uych5WD.png">
+<meta property="og:image" content="https://s2.loli.net/2022/04/06/B5CjYbMF8xSiwc3.png">
+<meta property="og:image" content="https://s2.loli.net/2022/04/06/ZN3O8Buq7EJMGFk.png">
+<meta property="og:image" content="https://s2.loli.net/2022/04/06/gD9aF73cNrnYSvP.png">
+<meta property="og:image" content="https://s2.loli.net/2022/04/06/t7jBZYCvXi9zJ5n.png">
+<meta property="og:image" content="https://s2.loli.net/2022/04/06/geidwV495SKmIyk.png">
+<meta property="article:published_time" content="2022-06-02T05:36:02.000Z">
+<meta property="article:modified_time" content="2022-06-02T05:37:10.304Z">
 <meta property="article:author" content="Levi Marvin">
-<meta property="article:tag" content="OpenWrt">
-<meta property="article:tag" content="Blog">
-<meta property="article:tag" content="Levi Marvin">
-<meta property="article:tag" content="暮林">
-<meta property="article:tag" content="日暮清林">
+<meta property="article:tag" content="X509">
+<meta property="article:tag" content="OpenSSL">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s2.loli.net/2022/04/06/vNQsLAJ2lI7CD4M.png">
 
-<link rel="canonical" href="https://levimarvin.site/">
+<link rel="canonical" href="https://levimarvin.site/2022/06/02/%E5%85%AC%E9%92%A5%E5%9F%BA%E7%A1%80%E8%AE%BE%E6%96%BD%E7%9A%84%E6%90%AD%E5%BB%BA%E4%B8%8E%E7%BB%B4%E6%8A%A4-%E5%9F%BA%E4%BA%8E-OpenSSL/">
 
 
 <script id="page-configurations">
   // https://hexo.io/docs/variables.html
   CONFIG.page = {
     sidebar: "",
-    isHome : true,
-    isPost : false,
+    isHome : false,
+    isPost : true,
     lang   : 'zh_Hans'
   };
 </script>
 
-  <title>博客 - 暮林网站群</title>
+  <title>公钥基础设施的搭建与维护(基于 OpenSSL) | 博客 - 暮林网站群</title>
   
 
 
@@ -147,9 +158,10 @@
         <div class="content-wrap">
           
 
-          <div class="content index posts-expand">
+          <div class="content post posts-expand">
             
-      
+
+    
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh_Hans">
@@ -165,10 +177,9 @@
       <meta itemprop="name" content="博客 - 暮林网站群">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/06/02/%E5%85%AC%E9%92%A5%E5%9F%BA%E7%A1%80%E8%AE%BE%E6%96%BD%E7%9A%84%E6%90%AD%E5%BB%BA%E4%B8%8E%E7%BB%B4%E6%8A%A4-%E5%9F%BA%E4%BA%8E-OpenSSL/" class="post-title-link" itemprop="url">公钥基础设施的搭建与维护(基于 OpenSSL)</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          公钥基础设施的搭建与维护(基于 OpenSSL)
+        </h1>
 
         <div class="post-meta">
             <span class="post-meta-item">
@@ -192,7 +203,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>最后更新：<strong>2022&#x2F;06&#x2F;02</strong><br>最后校对：<strong>2022&#x2F;06&#x2F;02</strong></p>
+        <p>最后更新：<strong>2022&#x2F;06&#x2F;02</strong><br>最后校对：<strong>2022&#x2F;06&#x2F;02</strong></p>
 <p>本文基于环境：</p>
 <p>操作系统：<code>Windows 11 Professional Workstation 22581</code><br>OpenSSL：<code>OpenSSL 1.1.1o</code></p>
 <p>阅读本文前须知：</p>
@@ -391,192 +402,34 @@
 <p>证书颁发机构必须定期签发证书吊销列表，更新证书数据库并告知用户证书的状态。一旦任何证书发生私钥泄漏，根证书颁发机构必须在第一时间吊销该证书，做出报告公开并提交审计。</p>
 <p>证书颁发机构还应保障服务最高可用性，确保服务不会因意外中断。</p>
 
-      
     </div>
 
     
     
     
+
       <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
+          <div class="post-tags">
+              <a href="/tags/X509/" rel="tag"># X509</a>
+              <a href="/tags/OpenSSL/" rel="tag"># OpenSSL</a>
+          </div>
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh_Hans">
-    <link itemprop="mainEntityOfPage" href="https://levimarvin.site/2022/06/02/%E4%BB%8E-0-%E5%BC%80%E5%A7%8B%E5%AE%9A%E5%88%B6%E4%BD%A0%E7%9A%84-OpenWrt-%E7%B3%BB%E7%BB%9F/">
+        
 
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Levi Marvin">
-      <meta itemprop="description" content="这里是日暮清林的博客，欢迎来玩！">
-    </span>
 
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="博客 - 暮林网站群">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/06/02/%E4%BB%8E-0-%E5%BC%80%E5%A7%8B%E5%AE%9A%E5%88%B6%E4%BD%A0%E7%9A%84-OpenWrt-%E7%B3%BB%E7%BB%9F/" class="post-title-link" itemprop="url">从 0 开始定制你的 OpenWrt 系统</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">Posted on</span>
-              
-
-              <time title="Created: 2022-06-02 00:01:13 / Modified: 00:06:20" itemprop="dateCreated datePublished" datetime="2022-06-02T00:01:13+08:00">2022-06-02</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>最后更新：<strong>2022&#x2F;06&#x2F;01</strong><br>最后校对：<strong>2022&#x2F;06&#x2F;01</strong></p>
-<p>本教程分为二个部分：<strong>编译教程与问题解决</strong> 和 <strong>特殊设备问题解决</strong>。<br>编译教程与问题解决：基础知识、准备工作、开始编译、错误与解决、FAQ、其他。<br>OpenWrt 的一些功能实现会写在教程的“其他”节）</p>
-<p>请注意，文章部分 patch 代码块为了显示效果会写为 diff 代码块，我会在代码块前添加“（patch 代码）”来标志。</p>
-<p>本文仅在酷安、<a target="_blank" rel="noopener" href="https://tualatin.club/?p=1044">图拉丁Club</a>、<a target="_blank" rel="noopener" href="https://www.right.com.cn/forum/thread-8212637-1-1.html">恩山论坛</a>发布，请以上述平台中最新文章为准，谢绝一切转载。</p>
-<h2 id="基础知识-x2F-Basic"><a href="#基础知识-x2F-Basic" class="headerlink" title="基础知识 &#x2F; Basic"></a>基础知识 &#x2F; Basic</h2><p>本节名词解释：  </p>
-<ul>
-<li>SDK —— 英文 Software Development Kit 的缩写，翻译：“软件开发套件”。  </li>
-<li>ImageBuilder —— 翻译：映像构建器。  </li>
-<li>Github —— 国际著名的开源代码托管平台，国内可能无法直接访问。</li>
-</ul>
-<p><strong>对于教程中任何出现中文方括号（<code>【】</code>）的内容，请将其（包括方括号）替换为方括号内文本表示的“实际内容”。</strong><br>如：请将 <code>【Linux内核版本】</code> 替换为 <code>5.10.4</code>。</p>
-<h3 id="源码、SDK、ImageBuilder-x2F-Source-SDK-and-ImageBuilder"><a href="#源码、SDK、ImageBuilder-x2F-Source-SDK-and-ImageBuilder" class="headerlink" title="源码、SDK、ImageBuilder &#x2F; Source, SDK and ImageBuilder"></a>源码、SDK、ImageBuilder &#x2F; Source, SDK and ImageBuilder</h3><p>编译 OpenWrt 最好使用来自官方的源码。即位于 <a target="_blank" rel="noopener" href="https://github.com/OpenWrt/OpenWrt">Github 仓库</a> 或 <a href="">第三方镜像源</a> 的源码。</p>
-<p>对于不同的需求，有下面三种选择：</p>
-<ol>
-<li>如果你想<strong>定制 OpenWrt</strong>，最好的方法是<strong>直接从 OpenWrt 放在 Github 上的源码开始修改和编译</strong>。  </li>
-<li>如果你想<strong>定制&#x2F;编译 opkg 的软件包</strong>（<code>*.ipk</code>）<strong>或定制 OpenWrt</strong>，最好的方法是<strong>直接从 OpenWrt 官方和各大镜像</strong>（如清华Tuna镜像源）<strong>上的 SDK 开始修改和编译</strong>。  </li>
-<li>如果你想<strong>简单打包 OpenWrt</strong>（给 OpenWrt 封装第三方 opkg），最好的方法是<strong>直接从 OpenWrt 官方和各大镜像</strong>（如清华 Tuna 镜像源）<strong>上的 ImageBuilder 开始修改和编译</strong>。</li>
-</ol>
-<p>复杂度和可定制度从上往下递减。<br>总的来说，OpenWrt 的源码、SDK、ImageBuilder 是面向不同人、不同需求所准备的。<br>编译 OpenWrt 的源码也可以生成 SDK 和 ImageBuilder（需要手动选择）。</p>
-<p>友情链接：</p>
-<ul>
-<li><a target="_blank" rel="noopener" href="https://mirrors.tuna.tsinghua.edu.cn/">清华大学 Tuna 镜像源</a></li>
-<li><a target="_blank" rel="noopener" href="https://mirrors.ustc.edu.cn/">中国科技大学镜像源</a></li>
-</ul>
-<h3 id="Patch-文件（补丁文件）-x2F-Patch-Files"><a href="#Patch-文件（补丁文件）-x2F-Patch-Files" class="headerlink" title="Patch 文件（补丁文件） &#x2F; Patch Files"></a>Patch 文件（补丁文件） &#x2F; Patch Files</h3><p>位置：补丁文件通常位于源码目录 <code>target/linux/【架构】/patches-【Linux 内核版本】/</code> 目录下，这个<strong>目录的名字不是固定的（请勿直接复制粘贴）</strong>。<br>名称：<code>000-XXXXXX.patch</code>，开头的数字（如：<code>000</code>）表示这个补丁文件的序号，也对补丁文件的应用顺序做了定义。短横线（“-”）后的英文字符串为对这个补丁文件的说明。<br>例如：<code>322-mt7621-fix-cpu-clk-add-clkdev.patch</code><br>需要注意：补丁文件开头的数字不能与现有补丁文件开头的数字重复！补丁文件的说明可以自定义。</p>
-<h4 id="语法-x2F-Grammar"><a href="#语法-x2F-Grammar" class="headerlink" title="语法 &#x2F; Grammar"></a>语法 &#x2F; Grammar</h4><h5 id="头-x2F-Head"><a href="#头-x2F-Head" class="headerlink" title="头 &#x2F; Head"></a>头 &#x2F; Head</h5><p>“头”用来表示需要修补的文件，以 <code>+++</code> 和 <code>---</code> 两行开头，另一个“头”的开始结束，用来表示旧文件和新文件。<br>例如：<br>（patch 代码）</p>
-<figure class="highlight diff"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">--- a/arch/mips/ralink/mt7621.c</span></span><br><span class="line"><span class="comment">+++ b/arch/mips/ralink/mt7621.c</span></span><br></pre></td></tr></table></figure>
-
-<p>“头”后面的块均用来修补“头”中指定的文件。</p>
-<h5 id="块-x2F-Block"><a href="#块-x2F-Block" class="headerlink" title="块 &#x2F; Block"></a>块 &#x2F; Block</h5><p>“块”用来表示需要修补的内容，以  <code>@@</code>  开头，另一个“块”的开头或另一个“头”的开头结束。<br>例如：<br>（patch 代码）</p>
-<figure class="highlight diff"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@@ -105,11 +110,94 @@</span> static struct rt2880_pmx_group mt7621_pi</span><br></pre></td></tr></table></figure>
-<p>“块”的开头第一行可以称为“‘块’的起始行”，“块”的起始行中，两个“@@”（不是两个“@”）中间的内容指定这一块的内容应该修补原文件的哪里、多少行，修改的内容是什么。<br>在这个示例中，这一块表示：从原文件的第 105 行开始，删除 11 行，从第 110 行开始，添加 94 行。<br>逗号前的数字前面的符号用于表示增加行（<code>+</code>）还是删除行（<code>-</code>），不写符号则表示仅引用（用于“定位”）。<br><strong>要修改的内容从“块”的起始行已经开始了</strong>，第二个“@@”后面写的内容即为<strong>要改为的内容</strong>的第一行。</p>
-<p>增加行的内容的语法取决于被修补文件的类型，例如对于修补上述“头”中指定的需要修补的文件而言（<code>mt7621.c</code>），添加行的内容的语法为 C 语言的语法（因为“.c”结尾的文件为 C 语言源文件）。</p>
-<h3 id="OpenWrt-的固件分类-x2F-OpenWrt-Image-Category"><a href="#OpenWrt-的固件分类-x2F-OpenWrt-Image-Category" class="headerlink" title="OpenWrt 的固件分类 &#x2F; OpenWrt Image Category"></a>OpenWrt 的固件分类 &#x2F; OpenWrt Image Category</h3><p>OpenWrt 将其固件分为四类：</p>
-<ul>
-<li>Kernel —— 具有最少文件系统的 Linux 内核。</li>
-<li>Kernel1 —— 单独的 Linux 内核映像。</li>
-<li>rootfs0 —— 单独的根文件系统映像。</li>
-<li>Systupgrade —— 系统更新映像，含有固件所有完整的功能。</li>
-</ul>
-<p>最常使用的为 Kernel 和 Sysupgrade 映像。<br>Kernel 即为 initramfs 映像，具有基本的功能，一般用于双分区设备的初始化安装。<br>Sysupgrade 即为完整的全量映像，具有全部的软件包和完整的功能，为路由器的最终系统。</p>
-<p>Kernel1 和 rootfs0 不常使用，不在本文探讨。</p>
-<h3 id="OpenWrt-的源码分类-x2F-OpenWrt-Source-Category"><a href="#OpenWrt-的源码分类-x2F-OpenWrt-Source-Category" class="headerlink" title="OpenWrt 的源码分类  &#x2F; OpenWrt Source Category"></a>OpenWrt 的源码分类  &#x2F; OpenWrt Source Category</h3><p>目前 OpenWrt 的源码主要有：</p>
-<ul>
-<li>OpenWrt 官方源码</li>
-<li>X-Wrt 源码</li>
-<li>ImmortalWrt</li>
-<li>LEDE 源码（“L大”源码）</li>
-</ul>
-<p>X-Wrt 在 OpenWrt 的基础上，做了部分易用性优化。很多非官方源码已停止更新&#x2F;维护，推荐使用 OpenWrt 官方源代码，维护人数多，安全性更好，代码、使用的 Linux 内核更新，同时交流社区最多，易于问题解决。<br>本文使用 OpenWrt 官方源码。需要注意的是，固件的“特有”软件包由固件编译者添加，并非某个源码特有。</p>
-<h2 id="准备工作-x2F-Preparing-Works"><a href="#准备工作-x2F-Preparing-Works" class="headerlink" title="准备工作 &#x2F; Preparing Works"></a>准备工作 &#x2F; Preparing Works</h2><p>本节名词解释：  </p>
-<ul>
-<li>Linux —— 类 Unix 的开源操作系统（常用于通称基于其的系统）。  </li>
-<li>Windows —— 由微软开发的闭源操作系统的名称。  </li>
-<li>Ubuntu —— 一个基于 Linux 系统的名称。  </li>
-<li>Fedora —— 一个基于 Linux 系统的名称。  </li>
-<li>WSL —— 英文 Windows Subsystem for Linux 的缩写，翻译：“适用于 Windows 的 Linux 子系统”。  </li>
-<li>VMware —— 集成了虚拟机环境的软件的名称。  </li>
-<li>宿主机 —— 指运行虚拟机&#x2F;模拟环境等不存在于现实的环境的设备。</li>
-</ul>
-<p>本人的编译环境：</p>
-<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">CPU：Intel Core i5-10400</span><br><span class="line">GPU：NVIDIA GeForce GTX650 (Patched for UEFI)</span><br><span class="line">RAM：DDR4 16GB 2733MHz</span><br><span class="line">硬盘（系统）：SSD 120GB</span><br><span class="line">网络：中国联通 300Mbps GPON</span><br><span class="line"></span><br><span class="line">主系统：Windows 11 22H2 PREVIEW</span><br><span class="line">子系统：Ubuntu 20.04 LTS</span><br><span class="line">子系统环境：</span><br><span class="line">  &gt; 环境变量（PATH）：/home/levi/openwrt/staging_dir/host/bin:/home/levi/openwrt/staging_dir/toolchain-mipsel_24kc_gcc-11.2.0_musl/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin</span><br><span class="line">编译目标：OpenWrt 22.03 (git branch)</span><br><span class="line">  &gt; MediaTek Ralink MIPS</span><br><span class="line">  &gt; MT7621 based boards</span><br><span class="line">  &gt; Xiaomi Mi Router 3G</span><br></pre></td></tr></table></figure>
-
-<h3 id="安装依赖-x2F-Install-Dependencies"><a href="#安装依赖-x2F-Install-Dependencies" class="headerlink" title="安装依赖 &#x2F; Install Dependencies"></a>安装依赖 &#x2F; Install Dependencies</h3><p>官方和我均推荐使用 Ubuntu 系统进行编译，不论是虚拟机（WSL&#x2F;VMware&#x2F;其他）还是实体机。我尝试使用 Fedora 35（WSL）进行编译的时候尽管已经安装好各种依赖，但总有一些玄学问题。最后编译成功是在 Ubuntu 20.04 LTS（WSL）系统上。<br>Ubuntu 推荐执行这个命令（两条都要执行）：<br>（来自 OpenWrt 官网）</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">sudo apt update</span><br><span class="line">sudo apt install build-essential ccache ecj fastjar file g++ gawk \</span><br><span class="line">gettext git java-propose-classpath libelf-dev libncurses5-dev \</span><br><span class="line">libncursesw5-dev libssl-dev python python2.7-dev python3 unzip wget \</span><br><span class="line">python3-distutils python3-setuptools python3-dev rsync subversion \</span><br><span class="line">swig time xsltproc zlib1g-dev</span><br></pre></td></tr></table></figure>
-
-<h3 id="编译前准备-x2F-Preparing-for-Compiling"><a href="#编译前准备-x2F-Preparing-for-Compiling" class="headerlink" title="编译前准备 &#x2F; Preparing for Compiling"></a>编译前准备 &#x2F; Preparing for Compiling</h3><ol>
-<li>用户账户：<br>确认当前用户不是“root”用户，如果是，则新建并切换为普通用户（建议在安装系统时就创建，后期创建的普通用户可能会有权限问题），随后设置默认用户为普通用户。</li>
-<li>环境变量：<br>对于 WSL，官方推荐使用下面的环境变量替代系统原有环境变量（因为 WSL 子系统的 <code>$PATH</code> 会包含部分 Windows 目录，而这些目录带有空格，可能导致编译失败）：<br><code>PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin</code><br>并且推荐在这个环境变量的基础上添加 OpenWrt 编译工具链的变量（OpenWrt 编译工具链在编译之前不存在，但是开始编译后会自动生成，因此可以在编译前添加入系统环境变量）：<br><code>PATH=~/【OpenWrt源码目录】/staging_dir/host/bin:~/【OpenWrt 源码目录】/staging_dir/toolchain-mipsel_24kc_gcc-【GCC 版本】_musl/bin:$PATH</code></li>
-<li>网络环境：<br>确保可以正常访问 OpenWrt 源码的 Github 仓库。<br>确保可以正常访问部分软件包源码的下载仓库&#x2F;地址。</li>
-<li>源码：<br>首先下载 OpenWrt 的源码（克隆仓库到本地）：<br><code>git clone https://github.com/openwrt/openwrt.git</code><br>执行命令修改目录权限，防止权限问题造成编译失败：</li>
-</ol>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">chmod -R 777 OpenWrt</span><br><span class="line">chmod -R +x OpenWrt</span><br></pre></td></tr></table></figure>
-
-<p>进入源码目录，首先要做的事情是切换分支到你想要的 OpenWrt 版本（分支），如果没有你想要的版本，请从别处下载你想要的版本的 OpenWrt 源码，如果你想使用最新的代码，可以不切换分支，直接使用  <code>master</code>  分支的代码（但这样做可能导致你的固件包含许多 BUG）。<br>例如：强制切换到 OpenWrt 22.03 版本的分支。<br><code>git checkout --force openwrt-22.03</code><br>切换分支完毕后，我们需要添加 OpenWrt 的“feeds”。<br>修改 <code>feeds.conf.default</code> 文件，添加你想要的 feeds 源后，保存。<br>使用命令更新并安装 feeds 源：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">./script/feeds update -a	# 执行源码目录内 feeds 脚本的 update 命令</span><br><span class="line">./script/feeds install -a	# 执行源码目录内 feeds 脚本的 install 命令</span><br></pre></td></tr></table></figure>
-
-<h2 id="开始编译-x2F-Start-Compiling"><a href="#开始编译-x2F-Start-Compiling" class="headerlink" title="开始编译 &#x2F; Start Compiling"></a>开始编译 &#x2F; Start Compiling</h2><h3 id="配置-OpenWrt-的特性、功能、软件包等-x2F-Config-OpenWrt"><a href="#配置-OpenWrt-的特性、功能、软件包等-x2F-Config-OpenWrt" class="headerlink" title="配置 OpenWrt 的特性、功能、软件包等 &#x2F; Config OpenWrt"></a>配置 OpenWrt 的特性、功能、软件包等 &#x2F; Config OpenWrt</h3><p>首先要确定你编译的固件需要用在什么<strong>架构</strong>的什么<strong>芯片</strong>的什么<strong>型号</strong>的设备上。<br>比如我的是：固件用在 <strong>MediaTek MIPS</strong> 架构的 <strong>MT7621</strong> 的芯片的 <strong>小米路由 3G</strong> 设备。<br>使用命令：<br><code>make menuconfig</code><br>随后你的终端会变成一个使用键盘操作配置的 GUI 界面，如果终端界面大小过小则无法显示 GUI 界面并进行配置！<br>根据每一个选项的字面意思（不懂英文的自行翻译）来进行配置。<br>大多数的功能和配置都会影响固件的大小从而影响路由器硬盘空间的占用，因此如果添加过多的功能和软件包则会造成固件大小和实际安装后的大小过大！  </p>
-<p>对于部分双分区的设备而言，由于其固件可能主要使用第二个分区作为系统分区，第一个分区大小较小，因此无法安装较大的 initramfs 映像，从而无法正常启动 initramfs 映像（这个的影响会写在后面）。</p>
-<h3 id="下载源码-x2F-Download-Souce"><a href="#下载源码-x2F-Download-Souce" class="headerlink" title="下载源码 &#x2F; Download Souce"></a>下载源码 &#x2F; Download Souce</h3><p>根据你上一步的配置，下载编译需要的源码（包括软件包），这步操作将减少编译时因下载错误造成的编译失败并且节省编译时间。<br>使用命令：<br><code>make download -j【CPU线程数】 V=s</code>  【<br>请根据自己电脑的 CPU 来设置，例如本人的这条命令为：<br><code>make download -j12 V=s</code><br>由于网络环境影响，有时会下载失败或卡住，这时可以通过“Ctrl + C”（<code>^C</code>）快捷键终止操作，执行下面的命令 <em>删除下载临时文件</em> 后再次执行上面的命令继续下载。<br><code>rm -rf tmp/</code><br>小技巧：有时候无法通过 “curl” 工具下载特定文件或者自动下载的文件地址不正确&#x2F;失效导致一直下载失败，这时可以直接利用搜索引擎搜索需要下载的文件名下载到电脑后放到位于 OpenWrt 源码目录内 <code>dl/</code> 目录下，并且删除下载临时文件后继续执行下载命令直到完全正常（无报错）。<br><em>推荐多执行几次，确保所需软件包的源码下载正确、完整</em>。</p>
-<h3 id="编译-x2F-Compiling"><a href="#编译-x2F-Compiling" class="headerlink" title="编译 &#x2F; Compiling"></a>编译 &#x2F; Compiling</h3><p>官方推荐使用单线程编译（<code>make -j1 V=s</code>），这样会让错误显示在最底部（不同线程执行命令的顺序不同，因此错误信息返回的时间也不同，有可能导致错误信息被其他线程的正确信息推到终端后面）<br>开始前的建议：检查位于 OpenWrt 源码目录内 <code>dl/</code> 目录下下载的源文件（文件大小、哈希值等），通常文件大小小于 1M 的源码文件是下载错误的，建议重新下载。（例如：<code>php 8.1.3</code> 为 11.7M，Linux 显示为 12M）<br>我个人推荐：<br>使用全线程编译，当遇到错误终止后再次多线程编译（可能解决玄学问题，但我没遇到），同一问题没有消失查看错误：有明显报错信息的，根据报错信息解决。没有明显报错信息的，换单线程编译查看错误（<code>make -j1 V=sc</code>）。<br>目前我遇到的错误和解决方案：</p>
-<ol>
-<li>修改修补文件后，内核无法编译成功。原因：修补文件“块”内容的语法错误。报错后待编译程序自动中止后修正修补文件的语法错误，随后可继续多线程编译。</li>
-<li>同一个文件，但两个软件包均提供了。报错自动中止后重新配置 OpenWrt，冲突的软件包二选一（OpenWrt 自带的软件包优先保留（为了兼容性），但也可选择替换，一般不会出现问题）。</li>
-</ol>
-<p>使用命令进行编译：<br><code>make -j12 V=s</code><br>根据我的电脑配置，最后编译成功实际花费时间（取决于功能和软件包的数量）：34 分钟。</p>
-<p>因为使用的是 WSL，存在性能损耗，因此实际编译速度应该更快一点。</p>
-<h2 id="错误与解决（编译时）-x2F-Error-Solutions-Compiling"><a href="#错误与解决（编译时）-x2F-Error-Solutions-Compiling" class="headerlink" title="错误与解决（编译时）&#x2F; Error Solutions (Compiling)"></a>错误与解决（编译时）&#x2F; Error Solutions (Compiling)</h2><p>这里仅说明<strong>我遇到的问题</strong>，我没遇到的也不知道，也不能乱说。</p>
-<h3 id="内核编译错误-x2F-Error-of-Kernel-Compiling"><a href="#内核编译错误-x2F-Error-of-Kernel-Compiling" class="headerlink" title="内核编译错误 &#x2F; Error of Kernel Compiling"></a>内核编译错误 &#x2F; Error of Kernel Compiling</h3><p>这种错误通常是 Linux 内核文件在编译时发生错误，这时需要检查是否修改过内核源码文件和修补文件。<br>如果修改过，则进行检查，检查修改过的文件语法、文件名是否有问题，更改的内容的语法是否有问题（比如是否缺少符号，“头”指定的新的行数是否与“块”中写入的相等）。<br>例如：<br>原来修补文件的“头”是：<br><code>@@ -10,11 +12,15 @@ static struct example</code><br>意思为从第十行删去11行，随后从第十二行添加<em>15</em>行。如果增加&#x2F;删除了修补文件“块”中的任何一行，则上方代码中加粗的数字应当对应增加&#x2F;减少行数。</p>
-<h3 id="软件包编译错误-x2F-Error-of-Package-Compiling"><a href="#软件包编译错误-x2F-Error-of-Package-Compiling" class="headerlink" title="软件包编译错误 &#x2F; Error of Package Compiling"></a>软件包编译错误 &#x2F; Error of Package Compiling</h3><p>这种错误通常是：</p>
-<ol>
-<li>选中的软件包中的部分文件相互冲突。</li>
-<li>玄学问题。</li>
-</ol>
-<p>对于第 1 种问题，我们需要查看错误日志，找到对应提示的文件。<br>例如提示（大概意思）：“软件包：XXX 无法创建文件 ABC，因为 YYY 也提供了这个文件”。<br>这个时候需要重新配置 OpenWrt，在冲突的软件包二选一。</p>
-<p>对于第 2 种问题，可能是<strong>下载的软件包源码文件有问题</strong>或<strong>莫名其妙出现这种情况</strong><br>我在用 Fedora 35 编译的时候会有莫名其妙的问题，但使用 Ubuntu 则一次性编译成功，所以请尽量使用 Ubuntu 系统进行编译。<br>最好的方法是再次执行编译，大多时候这种问题就会消失，但如果还不消失，则需要执行下面的命令（每个命令我会用“#”符号在末尾注释）。</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">rm -rf tmp/                                 # 清空make download的缓存（临时文件）</span><br><span class="line">rm -rf dl/【提示编译失败的软件包的名字】&lt;TAB&gt;    # 删除无法编译的软件包源码，&lt;TAB&gt;表示按键盘的“TAB键”</span><br><span class="line">make download -j【CPU线程数】V=s              # 重新下载缺少的软件包源码</span><br><span class="line">make -j1 V=sc                               # “单线程”编译，显示全部错误日志</span><br></pre></td></tr></table></figure>
-
-<p>随后观察是否仍有错误，如果问题消失则可以按需求使用“Ctrl + C”终止后再次多线程编译。<br>欢迎补充相关的编译问题。</p>
-<h2 id="FAQ-x2F-Question-and-Answer"><a href="#FAQ-x2F-Question-and-Answer" class="headerlink" title="FAQ &#x2F; Question and Answer"></a>FAQ &#x2F; Question and Answer</h2><ol>
-<li>软件包<br>Q：为什么我没有添加某个软件包、库，在编译的时候自动开始下载编译？<br>A：部分软件包<strong>编译时</strong>依赖于其他软件包、库和一些编程语言，这种情况使用提前下载源码文件的命令是无法下载的。如 AdGuardHome 软件包。其编译时依赖于 php、node.js、golang 等语言，因此编译过程中会自动下载这些语言的源码并编译。</li>
-<li>刷机<br> Q：我定制好了固件，接下来怎么刷？<br> A：对于路由器刷机，我们一般推荐使用下面的方案：<br> 刷入 Breed 固件，通过 Breed 固件刷入系统。Breed 固件可以保证路由器不论怎么刷机都不会刷坏。但如果在刷入 Breed 固件的过程操作失败，那么只能通过串口刷机救砖，如果厂家没有在路由器上提供串口端口，则只能通过编程器直刷闪存。因此风险与收益均较高。<br> 进入 Breed 固件，在控制台页面选择 Sysupgrade 固件刷入，重启。<br> <strong>对于特殊设备，刷入方式不同，请自行查找确认设备为普通设备。本文末仅有少量特殊设备的刷入方案。</strong></li>
-</ol>
-<h2 id="其他-x2F-Others"><a href="#其他-x2F-Others" class="headerlink" title="其他 &#x2F; Others"></a>其他 &#x2F; Others</h2><h3 id="OpenWrt-的一些功能实现-x2F-Feature-realization"><a href="#OpenWrt-的一些功能实现-x2F-Feature-realization" class="headerlink" title="OpenWrt 的一些功能实现 &#x2F; Feature realization"></a>OpenWrt 的一些功能实现 &#x2F; Feature realization</h3><p>（欢迎大家补充）</p>
-<ol>
-<li>更改默认的 IP 地址：<br>OpenWrt 默认的 IP 地址是 <code>192.168.1.1</code>，但对于多个子网或多台路由器的网络来说这可能不是很好。<br>使用命令：<br><code>uci set network.lan.ipaddr=&#39;【你要修改为的 IP 地址】&#39; &amp;&amp; uci commit network</code><br>然后重新启动路由器即可。</li>
-</ol>
-<h3 id="OpenWrt-问题交流-x2F-Communication"><a href="#OpenWrt-问题交流-x2F-Communication" class="headerlink" title="OpenWrt 问题交流 &#x2F; Communication"></a>OpenWrt 问题交流 &#x2F; Communication</h3><p>首先请自行使用搜索引擎如 Google、Bing 等对你的问题进行搜索并查找解决方案，若搜索引擎没有解决方案或提供的解决方案不适用&#x2F;无效，再去询问别人。</p>
-<p>关于询问别人：<br>如何询问？在哪询问？<br>除非<strong>明确知道</strong>对方是中国人，否则请使用<strong>英语</strong>交流（不会英语或英语不好的人请使用翻译软件，比你手打、自己编要好得多）。应尽可能<strong>简要</strong>的表述你的问题，如果可能还应告知对方你尝试了哪些解决方案（但没有用）。最重要的一点：<strong>请有礼貌</strong>。别人没有责任和义务去帮助你同时别人也不是神仙，解决问题主要靠自己，并且非必要不要告诉别人你是哪个国家的，不然你或多或少都代表了一个国家的人，尽管你没有资格。<br>这个问题其实很好理解，在别人不了解某个国家的人是怎样的，你就很容易给别人树立某个国家的人的形象。</p>
-<p>对于第三方软件包的问题，<strong>首先</strong>去它的讨论社区或 Issues，如 Github Issue，开发者提供的 IRC 频道或讨论组。如果没有讨论区域，再去 OpenWrt 的讨论社区询问，询问时应当告知别人你的问题是第三方软件包的问题。</p>
-<p>对于 OpenWrt 的问题，可以去 OpenWrt 提供的官方 <a target="_blank" rel="noopener" href="https://openwrt.org/irc">IRC 频道页面</a> 查找适合你的问题的频道。对于重大问题（如代码漏洞，BUG），可以在 OpenWrt 的 Github 源码仓库提交 Issue。（一般你也不知道是 BUG 还是你的问题，所以请直接去 IRC 频道询问）。</p>
-<h2 id="特殊设备问题解决-x2F-Special-Device-Problem-Solutions"><a href="#特殊设备问题解决-x2F-Special-Device-Problem-Solutions" class="headerlink" title="特殊设备问题解决 &#x2F; Special Device Problem Solutions"></a>特殊设备问题解决 &#x2F; Special Device Problem Solutions</h2><h3 id="小米路由-3G（R3G）-x2F-Xiaomi-Mi-Router-3G"><a href="#小米路由-3G（R3G）-x2F-Xiaomi-Mi-Router-3G" class="headerlink" title="小米路由 3G（R3G） &#x2F; Xiaomi Mi Router 3G"></a>小米路由 3G（R3G） &#x2F; Xiaomi Mi Router 3G</h3><p>小米路由 3G 为双分区设备，因此安装步骤略微复杂。<br>以提前刷入 Breed 固件为基础。进入 Breed 固件控制台页面，选择 OpenWrt <strong>官方编译</strong>的 initramfs 固件，刷入。重启后，在 OpenWrt 的 LuCI Web 控制台页面，选择“系统 &gt; 备份&#x2F;升级”，随后在“刷写新的固件”选项中，选择 Sysupgrade 映像刷入。重启后直接进入 Breed 控制台页面，添加环境变量 <code>xiaomi.r3g.bootfw</code> 值为 <code>2</code> （设置启动的分区为第二分区）重启即可。</p>
-<p>首先在 Breed 中刷入的固件被刷入第一分区，第一分区大小较小，无法容纳较大容量的固件，因此需要将第一分区刷入较小的 initramfs 固件（官方编译），由于自己定制的 OpenWrt 固件或多或少都会添加较多的软件包，因此大小较大，所以刷入后无法正常启动。进入 LuCI Web 控制台刷入的固件会被直接刷入第二分区，因此设置环境变量启动第二分区后重启即可。</p>
-
-      
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/06/02/%E4%BB%8E-0-%E5%BC%80%E5%A7%8B%E5%AE%9A%E5%88%B6%E4%BD%A0%E7%9A%84-OpenWrt-%E7%B3%BB%E7%BB%9F/" rel="prev" title="从 0 开始定制你的 OpenWrt 系统">
+      <i class="fa fa-chevron-left"></i> 从 0 开始定制你的 OpenWrt 系统
+    </a></div>
+      <div class="post-nav-item"></div>
     </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
       </footer>
+    
   </article>
   
   
-  
-
-
   
 
 
@@ -629,6 +482,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86-x2F-Basic"><span class="nav-number">1.</span> <span class="nav-text">基础知识 &#x2F; Basic</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A6%82%E8%AE%BA-x2F-Generality"><span class="nav-number">1.1.</span> <span class="nav-text">概论 &#x2F; Generality</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B0%E5%AD%97%E8%AF%81%E4%B9%A6-x2F-Certificate"><span class="nav-number">1.1.1.</span> <span class="nav-text">数字证书 &#x2F; Certificate</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AF%81%E4%B9%A6%E5%90%8A%E9%94%80%E5%88%97%E8%A1%A8-x2F-Certificate-Revokation-List"><span class="nav-number">1.1.2.</span> <span class="nav-text">证书吊销列表 &#x2F; Certificate Revokation List</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#OID-x2F-Object-Identifier"><span class="nav-number">1.1.3.</span> <span class="nav-text">OID &#x2F; Object Identifier</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%81%E4%B9%A6%E9%A2%81%E5%8F%91%E6%9C%BA%E6%9E%84-x2F-Certificate-Authority"><span class="nav-number">1.2.</span> <span class="nav-text">证书颁发机构 &#x2F; Certificate Authority</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%A0%B9%E8%AF%81%E4%B9%A6%E9%A2%81%E5%8F%91%E6%9C%BA%E6%9E%84%E8%AF%81%E4%B9%A6-x2F-Root-CA-Certificate"><span class="nav-number">1.2.1.</span> <span class="nav-text">根证书颁发机构证书 &#x2F; Root CA Certificate</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%89%A9%E5%B1%95%E9%AA%8C%E8%AF%81%E7%9A%84%E8%AF%81%E4%B9%A6-x2F-Extended-Verify-Certificate"><span class="nav-number">1.2.2.</span> <span class="nav-text">扩展验证的证书 &#x2F; Extended Verify Certificate</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%81%E4%B9%A6%E6%B3%A8%E5%86%8C%E5%AE%A1%E6%89%B9%E6%9C%BA%E6%9E%84-x2F-Registration-Authority"><span class="nav-number">1.3.</span> <span class="nav-text">证书注册审批机构 &#x2F; Registration Authority</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AD%BE%E5%90%8D%E8%AF%81%E4%B9%A6%E6%97%B6%E9%97%B4%E6%88%B3-x2F-Signed-Certificate-Timestamp"><span class="nav-number">1.4.</span> <span class="nav-text">签名证书时间戳 &#x2F; Signed Certificate Timestamp</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E5%AD%97%E8%AF%81%E4%B9%A6%E4%B8%8E%E6%89%A9%E5%B1%95-x2F-Certificate-and-Extension"><span class="nav-number">2.</span> <span class="nav-text">数字证书与扩展 &#x2F; Certificate and Extension</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AF%86%E9%92%A5%E6%A0%87%E8%AF%86%E7%AC%A6-x2F-Key-Identifier"><span class="nav-number">2.1.</span> <span class="nav-text">密钥标识符 &#x2F; Key Identifier</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8E%88%E6%9D%83%E5%AF%86%E9%92%A5%E6%A0%87%E8%AF%86%E7%AC%A6-x2F-Authority-Key-Identifier"><span class="nav-number">2.1.1.</span> <span class="nav-text">授权密钥标识符 &#x2F; Authority Key Identifier</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BB%E4%BD%93%E5%AF%86%E9%92%A5%E6%A0%87%E8%AF%86%E7%AC%A6-x2F-Subject-Key-Identifier"><span class="nav-number">2.1.2.</span> <span class="nav-text">主体密钥标识符 &#x2F; Subject Key Identifier</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8E%88%E6%9D%83%E4%BF%A1%E6%81%AF%E8%AE%BF%E9%97%AE-x2F-Authority-Info-Access"><span class="nav-number">2.2.</span> <span class="nav-text">授权信息访问 &#x2F; Authority Info Access</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%81%94%E6%9C%BA%E8%AF%81%E4%B9%A6%E7%8A%B6%E6%80%81%E5%8D%8F%E8%AE%AE-x2F-OCSP"><span class="nav-number">2.2.1.</span> <span class="nav-text">联机证书状态协议 &#x2F; OCSP</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AF%81%E4%B9%A6%E9%A2%81%E5%8F%91%E6%9C%BA%E6%9E%84%E9%A2%81%E5%8F%91%E8%80%85-x2F-Certificate-Authority-Issuers"><span class="nav-number">2.2.2.</span> <span class="nav-text">证书颁发机构颁发者 &#x2F; Certificate Authority Issuers</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CRL-%E5%88%86%E5%8F%91%E7%82%B9-x2F-CRL-Distribution-Points"><span class="nav-number">2.3.</span> <span class="nav-text">CRL 分发点 &#x2F; CRL Distribution Points</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A2%9E%E5%BC%BA%E5%9E%8B%E5%AF%86%E9%92%A5%E7%94%A8%E6%B3%95-x2F-Extended-Key-Usage"><span class="nav-number">2.4.</span> <span class="nav-text">增强型密钥用法 &#x2F; Extended Key Usage</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BB%E4%BD%93%E5%8F%AF%E9%80%89%E5%90%8D%E7%A7%B0-x2F-Subject-Alternative-Name"><span class="nav-number">2.5.</span> <span class="nav-text">主体可选名称 &#x2F; Subject Alternative Name</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SCT-%E5%88%97%E8%A1%A8-x2F-SCT-List"><span class="nav-number">2.6.</span> <span class="nav-text">SCT 列表 &#x2F; SCT List</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E2%80%9C%E5%9F%BA%E6%9C%AC%E7%BA%A6%E6%9D%9F%E2%80%9D%E4%B8%8E%E2%80%9C%E5%AF%86%E9%92%A5%E7%94%A8%E6%B3%95%E2%80%9D-x2F-Basic-Constraints-and-Key-Usage"><span class="nav-number">2.7.</span> <span class="nav-text">“基本约束”与“密钥用法” &#x2F; Basic Constraints and Key Usage</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%81%E4%B9%A6%E7%AD%96%E7%95%A5-x2F-Certificate-Policies"><span class="nav-number">2.8.</span> <span class="nav-text">证书策略 &#x2F; Certificate Policies</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%90%AD%E5%BB%BA%E4%B8%8E%E6%8A%80%E6%9C%AF%E7%BB%86%E8%8A%82-x2F-Build-and-Technical-Details"><span class="nav-number">3.</span> <span class="nav-text">搭建与技术细节 &#x2F; Build and Technical Details</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%81%E4%B9%A6%E9%A2%81%E5%8F%91%E6%9C%BA%E6%9E%84-x2F-Certificate-Authority-1"><span class="nav-number">3.1.</span> <span class="nav-text">证书颁发机构 &#x2F; Certificate Authority</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E8%A6%81%E6%B1%82-x2F-Basic"><span class="nav-number">3.1.1.</span> <span class="nav-text">基本要求 &#x2F; Basic</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%95%B0%E5%AD%97%E8%AF%81%E4%B9%A6-x2F-Certificate-1"><span class="nav-number">3.1.2.</span> <span class="nav-text">数字证书 &#x2F; Certificate</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%81%E4%B9%A6%E6%B3%A8%E5%86%8C%E5%AE%A1%E6%89%B9%E6%9C%BA%E6%9E%84-x2F-Registration-Authority-1"><span class="nav-number">3.2.</span> <span class="nav-text">证书注册审批机构 &#x2F; Registration Authority</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%B4%E6%8A%A4%E4%B8%8E%E5%AE%A1%E8%AE%A1-x2F-Maintenance-and-Audit"><span class="nav-number">4.</span> <span class="nav-text">维护与审计 &#x2F; Maintenance and Audit</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
